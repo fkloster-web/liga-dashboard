@@ -145,6 +145,96 @@ section { scroll-margin-top: 1.5rem; margin-bottom: 3.5rem; }
 }
 .placeholder .detalle { display: block; margin-top: .4rem; }
 
+/* ---------- Selector de escenario ---------- */
+.selector-escenario { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .75rem; }
+.selector-escenario button {
+  font: inherit;
+  font-size: .88rem;
+  padding: .4rem .9rem;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  background: var(--bg);
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.selector-escenario button:hover { color: var(--texto); }
+.selector-escenario button[aria-pressed="true"] {
+  background: var(--acento-suave);
+  border-color: var(--acento);
+  color: var(--acento);
+  font-weight: 600;
+}
+.nota-escenario { color: var(--texto-suave); font-size: .88rem; margin: 0 0 1.25rem; max-width: 70ch; }
+
+/* ---------- Tablas ---------- */
+.tabla-scroll { overflow-x: auto; }
+
+table.datos { width: 100%; border-collapse: collapse; font-size: .9rem; white-space: nowrap; }
+table.datos caption { text-align: left; color: var(--texto-suave); font-size: .85rem; padding-bottom: .6rem; }
+table.datos th, table.datos td { padding: .5rem .7rem; }
+table.datos thead th {
+  text-align: right;
+  font-size: .72rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+table.datos th.izq, table.datos td.izq { text-align: left; }
+table.datos td { text-align: right; font-variant-numeric: tabular-nums; }
+table.datos td.equipo { font-weight: 550; white-space: normal; }
+/* Sin líneas: las filas se distinguen por bandas alternas. */
+table.datos tbody tr.par { background: var(--bg-sutil); }
+
+/* La ÚNICA línea de la tabla es la que carga significado. */
+tr.corte-liguilla td {
+  border-top: 2px solid var(--acento);
+  padding: .4rem .7rem .55rem;
+  text-align: left;
+  font-size: .74rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--acento);
+  white-space: normal;
+}
+
+/* ---------- Estado de liguilla (ícono + palabra + color) ---------- */
+.estado { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; }
+.estado .glifo { font-weight: 700; }
+.estado-clasificado { color: var(--correcto); }
+.estado-eliminado { color: var(--error); }
+.estado-disputa { color: var(--texto-suave); }
+
+/* ---------- Marcadores de desempate y notas ---------- */
+.marcador-desempate { font-size: .72rem; color: var(--acento); cursor: help; margin-left: .1rem; }
+.notas-pie { list-style: none; margin: .9rem 0 0; padding: 0; font-size: .82rem; color: var(--texto-suave); max-width: 80ch; }
+.notas-pie li { margin-bottom: .35rem; }
+.notas-pie .marca { color: var(--acento); font-weight: 650; }
+
+.aviso {
+  background: var(--aviso-bg);
+  color: var(--aviso-texto);
+  border-radius: 8px;
+  padding: .75rem 1rem;
+  font-size: .87rem;
+  margin: 1rem 0 0;
+  max-width: 80ch;
+}
+
+.bloque { margin-top: 2.5rem; }
+.bloque h3 { margin-bottom: .35rem; }
+
+.hallazgo {
+  background: var(--acento-suave);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin-top: 1.25rem;
+  max-width: 78ch;
+}
+.delta-sube { color: var(--correcto); }
+.delta-baja { color: var(--error); }
+.delta-igual { color: var(--texto-suave); }
+
 /* ---------- Pie ---------- */
 footer {
   margin-left: var(--nav-ancho);
@@ -204,6 +294,9 @@ footer {
 
   footer { margin-left: 0; }
   .pie-interior { padding: 1.5rem 1.25rem; }
+
+  table.datos { font-size: .85rem; }
+  table.datos th, table.datos td { padding: .45rem .55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -260,6 +353,70 @@ footer {
     <h2 id="posiciones-titulo">2. Tabla de posiciones</h2>
     <p class="descripcion">Tabla oficial frente a la publicada, con el origen de cada diferencia y los escenarios alternativos.</p>
     <div class="placeholder" data-seccion="posiciones">Cargando datos…</div>
+    <div id="posiciones-contenido" hidden>
+
+      <div class="selector-escenario" id="selector-escenario" role="group" aria-label="Escenario de la tabla">
+        <button type="button" data-escenario="oficial" aria-pressed="true">Oficial</button>
+        <button type="button" data-escenario="en_cancha" aria-pressed="false">En cancha</button>
+        <button type="button" data-escenario="sin_doble_amarilla" aria-pressed="false">Sin doble amarilla</button>
+      </div>
+      <p class="nota-escenario" id="nota-escenario"></p>
+      <div class="aviso" id="aviso-estado-escenario" hidden>
+        La columna <strong>Estado</strong> (clasificado / eliminado / en disputa) se calculó una
+        sola vez, sobre la tabla <strong>oficial</strong>. En este escenario se muestra igual,
+        pero no es la clasificación que resultaría si este fuera el marcador que rige la liguilla.
+      </div>
+
+      <div class="tabla-scroll">
+        <table class="datos" id="tabla-posiciones">
+          <caption id="tabla-posiciones-caption"></caption>
+          <thead>
+            <tr>
+              <th class="izq" scope="col">Pos</th>
+              <th class="izq" scope="col">Equipo</th>
+              <th scope="col">PJ</th>
+              <th scope="col">G</th>
+              <th scope="col">E</th>
+              <th scope="col">P</th>
+              <th scope="col">GF</th>
+              <th scope="col">GC</th>
+              <th scope="col">DG</th>
+              <th scope="col">Pts</th>
+              <th class="izq" scope="col">Estado (tabla oficial)</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-posiciones-cuerpo"></tbody>
+        </table>
+      </div>
+
+      <ul class="notas-pie" id="notas-desempate"></ul>
+      <div class="aviso" id="aviso-sorteo" hidden></div>
+
+      <div class="bloque" id="bloque-comparacion">
+        <h3>Diferencias contra la tabla publicada</h3>
+        <p class="descripcion" id="comparacion-intro"></p>
+        <div class="tabla-scroll" id="comparacion-envoltura">
+          <table class="datos" id="tabla-comparacion">
+            <caption>Solo se listan los equipos cuya posición o puntos cambian frente a la publicada. Comparación siempre contra el escenario oficial.</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Equipo</th>
+                <th scope="col">Pos. publicada</th>
+                <th scope="col">Pos. oficial</th>
+                <th scope="col">Δ posición</th>
+                <th scope="col">Pts. publicados</th>
+                <th scope="col">Pts. oficiales</th>
+                <th scope="col">Δ puntos</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-comparacion-cuerpo"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="hallazgo" id="parrafo-hallazgo"></div>
+
+    </div>
   </section>
 
   <section id="goleo" aria-labelledby="goleo-titulo">
@@ -470,9 +627,247 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('posiciones', ['standings', 'j11', 'matches'], (tablas, j11, partidos) =>
-  `${Object.keys(tablas).length} escenarios de tabla, ${j11.clasificados.length} equipos ya ` +
-  `clasificados y ${partidos.validos.length} partidos jugados.`);
+(function seccionPosiciones() {
+  const ESCENARIOS = {
+    oficial: {
+      etiqueta: 'Oficial',
+      descripcion: 'Aplica el art. 32 (alineación indebida) a los 14 partidos donde corresponde. Es el resultado que rige la liguilla.',
+    },
+    en_cancha: {
+      etiqueta: 'En cancha',
+      descripcion: 'Marcador tal como terminó en el campo, sin aplicar el art. 32. Sirve para ver el impacto de la sanción.',
+    },
+    sin_doble_amarilla: {
+      etiqueta: 'Sin doble amarilla',
+      descripcion: 'El art. 32 se aplica solo donde la infracción no depende de la doble amarilla (6 de los 14 casos). Muestra qué tan decisiva es esa regla.',
+    },
+  };
+
+  const CRITERIO_LABEL = {
+    head_to_head_or_minitable: 'Resultado entre empatados / minitabla (art. 18, criterios 1-2)',
+    goal_diff: 'Diferencia de goles general (art. 18, criterio 3)',
+    goals_for: 'Goles a favor (art. 18, criterio 4)',
+    fewer_reds: 'Menos tarjetas rojas (art. 18, criterio 5)',
+    sorteo: 'Sorteo (art. 18, criterio 6): el reglamento no da un criterio determinista más allá de este punto',
+  };
+
+  const COLUMNAS = ['pj', 'g', 'e', 'p', 'gf', 'gc', 'dg', 'pts'];
+
+  let escenarioActual = 'oficial';
+
+  function estadoDe(equipo, j11) {
+    if (j11.clasificados.includes(equipo)) return { clase: 'estado-clasificado', glifo: '✓', texto: 'Clasificado' };
+    if (j11.eliminados.includes(equipo)) return { clase: 'estado-eliminado', glifo: '✕', texto: 'Eliminado' };
+    return { clase: 'estado-disputa', glifo: '◦', texto: 'En disputa' };
+  }
+
+  function tituloEstado(equipo, j11) {
+    const min = j11.puntos_min[equipo], max = j11.puntos_max[equipo];
+    const mejor = j11.mejor_posicion[equipo], peor = j11.peor_posicion[equipo];
+    return `Con los partidos pendientes, puede terminar entre ${min} y ${max} pts ` +
+      `(posición ${mejor}–${peor}).`;
+  }
+
+  function celda(valor) {
+    const td = document.createElement('td');
+    td.textContent = valor;
+    return td;
+  }
+
+  function renderTabla(standings, j11, escenario) {
+    const filas = standings[escenario];
+    const cuerpo = document.getElementById('tabla-posiciones-cuerpo');
+    cuerpo.innerHTML = '';
+    document.getElementById('tabla-posiciones-caption').textContent =
+      `Tabla ${ESCENARIOS[escenario].etiqueta.toLowerCase()}, con datos hasta la jornada 10 de 11.`;
+
+    const criteriosPresentes = new Map(); // criterio -> [equipos]
+
+    filas.forEach((fila, i) => {
+      if (i === 8) {
+        const sep = document.createElement('tr');
+        sep.className = 'corte-liguilla';
+        const td = document.createElement('td');
+        td.colSpan = 11;
+        td.textContent = 'Corte de liguilla · pasan los primeros 8';
+        sep.appendChild(td);
+        cuerpo.appendChild(sep);
+      }
+
+      const tr = document.createElement('tr');
+      if (i % 2 === 1) tr.className = 'par';
+
+      tr.appendChild(celda(fila.posicion));
+
+      const thEquipo = document.createElement('th');
+      thEquipo.setAttribute('scope', 'row');
+      thEquipo.className = 'izq equipo';
+      thEquipo.textContent = fila.equipo;
+      if (fila.criterio_desempate) {
+        const marca = document.createElement('span');
+        marca.className = 'marcador-desempate';
+        marca.textContent = ' †';
+        marca.title = CRITERIO_LABEL[fila.criterio_desempate] || fila.criterio_desempate;
+        thEquipo.appendChild(marca);
+        const lista = criteriosPresentes.get(fila.criterio_desempate) || [];
+        lista.push(fila.equipo);
+        criteriosPresentes.set(fila.criterio_desempate, lista);
+      }
+      tr.appendChild(thEquipo);
+
+      COLUMNAS.forEach((campo) => tr.appendChild(celda(fila[campo])));
+
+      const tdEstado = document.createElement('td');
+      tdEstado.className = 'izq';
+      const e = estadoDe(fila.equipo, j11);
+      const span = document.createElement('span');
+      span.className = `estado ${e.clase}`;
+      span.title = tituloEstado(fila.equipo, j11);
+      span.innerHTML = `<span class="glifo">${e.glifo}</span> ${e.texto}`;
+      tdEstado.appendChild(span);
+      tr.appendChild(tdEstado);
+
+      cuerpo.appendChild(tr);
+    });
+
+    const notas = document.getElementById('notas-desempate');
+    notas.innerHTML = '';
+    for (const [criterio, equipos] of criteriosPresentes) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="marca">†</span> ${CRITERIO_LABEL[criterio] || criterio}: ${equipos.join(', ')}.`;
+      notas.appendChild(li);
+    }
+
+    const avisoSorteo = document.getElementById('aviso-sorteo');
+    const conSorteo = filas.filter((f) => f.requiere_sorteo).map((f) => f.equipo);
+    if (conSorteo.length) {
+      avisoSorteo.hidden = false;
+      avisoSorteo.textContent =
+        `El art. 18 no resuelve el empate entre ${conSorteo.join(', ')}; el reglamento lo ` +
+        `define por sorteo. El orden mostrado aquí es provisional.`;
+    } else {
+      avisoSorteo.hidden = true;
+    }
+  }
+
+  function flecha(delta) {
+    if (delta === 0) return '<span class="delta-igual">sin cambio</span>';
+    const clase = delta > 0 ? 'delta-sube' : 'delta-baja';
+    const signo = delta > 0 ? '+' : '';
+    return `<span class="${clase}">${signo}${delta}</span>`;
+  }
+
+  function renderHallazgo(standings, cambios) {
+    const top8Publicada = new Set(standings.publicada.filter((f) => f.Pos <= 8).map((f) => f.Equipo));
+    const top8Oficial = new Set(standings.oficial.filter((f) => f.posicion <= 8).map((f) => f.equipo));
+    const entran = [...top8Oficial].filter((e) => !top8Publicada.has(e));
+    const salen = [...top8Publicada].filter((e) => !top8Oficial.has(e));
+    const liderPublicado = standings.publicada.find((f) => f.Pos === 1).Equipo;
+    const liderOficial = standings.oficial.find((f) => f.posicion === 1).equipo;
+
+    let texto = '';
+    if (liderPublicado !== liderOficial) {
+      texto += `El líder cambia: la tabla publicada corona a ${liderPublicado}, pero con las ` +
+        `reglas aplicadas correctamente el líder es ${liderOficial}. `;
+    }
+    if (entran.length || salen.length) {
+      const partes = [];
+      if (entran.length) partes.push(`entra${entran.length > 1 ? 'n' : ''} ${entran.join(' y ')}`);
+      if (salen.length) partes.push(`sale${salen.length > 1 ? 'n' : ''} ${salen.join(' y ')}`);
+      texto += `En la liguilla, ${partes.join(' y ')}. `;
+    }
+    texto += `En total, ${cambios.length} de 12 equipos cambian de posición o de puntos frente a ` +
+      `lo publicado.`;
+
+    document.getElementById('parrafo-hallazgo').textContent = texto;
+  }
+
+  function renderComparacion(standings) {
+    const introEl = document.getElementById('comparacion-intro');
+    const envoltura = document.getElementById('comparacion-envoltura');
+    const hallazgoEl = document.getElementById('parrafo-hallazgo');
+
+    // Fija al escenario oficial: es el único contraste con sentido contra la
+    // publicada, que pretende ser el resultado reglamentario.
+    if (escenarioActual !== 'oficial') {
+      envoltura.hidden = true;
+      hallazgoEl.hidden = true;
+      introEl.textContent =
+        'La comparación contra la tabla publicada solo aplica al escenario oficial, que es el ' +
+        'que corresponde al reglamento. Elige "Oficial" arriba para verla.';
+      return;
+    }
+    envoltura.hidden = false;
+    hallazgoEl.hidden = false;
+
+    const publicadaPorEquipo = {};
+    standings.publicada.forEach((f) => { publicadaPorEquipo[f.Equipo] = f; });
+
+    const cambios = [];
+    standings.oficial.forEach((f) => {
+      const pub = publicadaPorEquipo[f.equipo];
+      if (!pub) return;
+      const deltaPos = pub.Pos - f.posicion; // positivo = mejora (posición numérica baja)
+      const deltaPts = f.pts - pub.Pts;
+      if (deltaPos !== 0 || deltaPts !== 0) {
+        cambios.push({
+          equipo: f.equipo, posPub: pub.Pos, posOf: f.posicion, deltaPos,
+          ptsPub: pub.Pts, ptsOf: f.pts, deltaPts,
+        });
+      }
+    });
+    cambios.sort((a, b) => a.posOf - b.posOf);
+
+    introEl.textContent =
+      `${cambios.length} de 12 equipos cambian de posición o de puntos frente a la tabla que ` +
+      `publicó la liga.`;
+
+    const cuerpo = document.getElementById('tabla-comparacion-cuerpo');
+    cuerpo.innerHTML = '';
+    cambios.forEach((c) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<th class="izq equipo" scope="row">${c.equipo}</th>` +
+        `<td>${c.posPub}</td><td>${c.posOf}</td><td>${flecha(c.deltaPos)}</td>` +
+        `<td>${c.ptsPub}</td><td>${c.ptsOf}</td><td>${flecha(c.deltaPts)}</td>`;
+      cuerpo.appendChild(tr);
+    });
+
+    renderHallazgo(standings, cambios);
+  }
+
+  function render(escenario) {
+    escenarioActual = escenario;
+    Promise.all([cargarDatos('standings'), cargarDatos('j11')])
+      .then(([standings, j11]) => {
+        document.querySelectorAll('#selector-escenario button').forEach((b) => {
+          b.setAttribute('aria-pressed', String(b.dataset.escenario === escenario));
+        });
+        document.getElementById('nota-escenario').textContent = ESCENARIOS[escenario].descripcion;
+        document.getElementById('aviso-estado-escenario').hidden = (escenario === 'oficial');
+
+        renderTabla(standings, j11, escenario);
+        renderComparacion(standings);
+
+        document.querySelector('[data-seccion="posiciones"]').hidden = true;
+        document.getElementById('posiciones-contenido').hidden = false;
+      })
+      .catch((error) => {
+        const caja = document.querySelector('[data-seccion="posiciones"]');
+        caja.className = 'placeholder error';
+        caja.innerHTML = describirError(error);
+        console.error('[posiciones]', error);
+      });
+  }
+
+  document.getElementById('selector-escenario').addEventListener('click', (ev) => {
+    const boton = ev.target.closest('button[data-escenario]');
+    if (!boton) return;
+    render(boton.dataset.escenario);
+  });
+
+  render('oficial');
+})();
 </script>
 
 <script>
