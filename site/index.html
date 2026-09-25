@@ -285,7 +285,11 @@ details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
 }
 .kpi-etiqueta { color: var(--texto-suave); font-size: .85rem; margin-top: .2rem; }
 
-.grafica-envoltura { margin: 0 0 1.25rem; }
+/* Con maintainAspectRatio: false, Chart.js dimensiona el canvas al alto de su
+   contenedor: el contenedor necesita alto propio y position: relative, y el
+   canvas no debe llevar atributo height. */
+.grafica-envoltura { position: relative; margin: 0 0 1.25rem; height: 240px; }
+.grafica-envoltura.grafica-alta { height: 340px; }
 .grafica-envoltura canvas { max-width: 100%; }
 
 /* Cita textual de la interpretación redactada por el pipeline (nunca reescrita). */
@@ -567,7 +571,7 @@ footer {
         <div><div class="kpi-valor" id="kpi-goles-partido"></div><div class="kpi-etiqueta">goles por partido</div></div>
       </div>
       <div class="grafica-envoltura">
-        <canvas id="grafica-resultados" height="110" role="img" aria-label="Reparto de resultados por partido: local, empate y visitante"></canvas>
+        <canvas id="grafica-resultados" role="img" aria-label="Reparto de resultados por partido: local, empate y visitante"></canvas>
       </div>
       <div class="aviso" id="aviso-localia"></div>
 
@@ -578,8 +582,8 @@ footer {
           <div><div class="kpi-valor" id="kpi-tarjetas-partido"></div><div class="kpi-etiqueta">tarjetas por partido</div></div>
         </div>
         <p class="descripcion">Tarjetas por partido de cada árbitro, con el intervalo de confianza del 95% (barra clara) sobre el promedio (punto).</p>
-        <div class="grafica-envoltura">
-          <canvas id="grafica-arbitros" height="220" role="img" aria-label="Tarjetas por partido de cada árbitro, con intervalo de confianza del 95%"></canvas>
+        <div class="grafica-envoltura grafica-alta">
+          <canvas id="grafica-arbitros" role="img" aria-label="Tarjetas por partido de cada árbitro, con intervalo de confianza del 95%"></canvas>
         </div>
 
         <p id="parrafo-significancia"></p>
@@ -1264,12 +1268,14 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
             backgroundColor: color('--serie-neutral') + '55',
             borderRadius: 3,
             barPercentage: 0.5,
+            grouped: false, // el promedio se superpone al IC en la misma fila
           },
           {
             label: 'Promedio',
             data: refs.map((r) => [r.por_partido - EPS, r.por_partido + EPS]),
             backgroundColor: color('--serie-1'),
             barPercentage: 0.5,
+            grouped: false,
           },
         ],
       },
@@ -1278,7 +1284,7 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
         layout: { padding: { right: 60 } },
         scales: {
           x: { beginAtZero: true, grid: { color: color('--borde') }, title: { display: true, text: 'Tarjetas por partido' } },
-          y: { grid: { display: false }, grouped: false },
+          y: { grid: { display: false } },
         },
         plugins: {
           legend: {
