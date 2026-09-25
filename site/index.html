@@ -495,6 +495,8 @@ details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
 .dash table.datos th, .dash table.datos td { padding: .35rem .55rem; }
 .dash-scroll thead th { position: sticky; top: 0; background: var(--bg-elevado); z-index: 1; }
 #dash-tabla-calidad .nota-fila { white-space: nowrap; }
+/* Goleo es la tarjeta más angosta: los nombres pueden partirse para que "Goles" no quede fuera de vista. */
+#dash-tabla-goleo th, #dash-tabla-goleo td { white-space: normal; }
 .dash table.datos tbody tr.par { background: var(--bg-sutil); }
 
 /* Gráficas: contenedor con alto propio (Chart.js dimensiona el canvas al contenedor). */
@@ -502,7 +504,8 @@ details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
 .dash-grafica.alta { height: 290px; }
 
 .dash-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; }
-.dash-filtros label { display: flex; flex-direction: column; gap: .2rem; font-size: .75rem; color: var(--texto-suave); }
+.dash-filtros label { display: flex; flex-direction: column; gap: .2rem; font-size: .75rem; color: var(--texto-suave); min-width: 0; max-width: 100%; }
+.dash-filtros select { max-width: 100%; text-overflow: ellipsis; } /* el <select> toma el ancho de su opción más larga */
 .dash-filtros select, .dash-filtros button {
   font: inherit; font-size: .85rem; color: var(--texto); background: var(--bg-elevado);
   border: 1px solid var(--borde); border-radius: 6px; padding: .3rem .5rem;
