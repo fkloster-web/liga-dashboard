@@ -307,6 +307,26 @@ table.datos td.num { text-align: left; vertical-align: top; font-weight: 700; }
 ul.restricciones { max-width: 70ch; padding-left: 1.2rem; }
 ul.restricciones li { margin-bottom: .35rem; }
 
+/* ---------- Metodología ---------- */
+table.datos code { font-family: var(--fuente-mono); font-size: .85em; }
+table.datos td.valor { text-align: left; white-space: normal; }
+table.datos td.valor .sub { display: block; }
+table.datos td.detalle { text-align: left; white-space: normal; max-width: 60ch; }
+pre.bloque-codigo {
+  background: var(--bg-sutil);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  max-width: 60ch;
+  overflow-x: auto;
+  font-family: var(--fuente-mono);
+  font-size: .88rem;
+}
+ul.descargas { padding-left: 1.2rem; }
+ul.descargas li { margin-bottom: .35rem; }
+ul.descargas a { color: var(--acento); font-weight: 600; }
+ul.descargas .nota-descarga { color: var(--texto-suave); font-size: .85rem; font-weight: 400; }
+
 details.detalle-tabla { margin: 1rem 0 1.5rem; }
 details.detalle-tabla summary {
   cursor: pointer;
@@ -800,6 +820,63 @@ footer {
     <h2 id="metodologia-titulo">9. Supuestos y metodología</h2>
     <p class="descripcion">Supuestos declarados, reglas de limpieza, cómo reproducir y uso de IA.</p>
     <div class="placeholder" data-seccion="metodologia">Cargando datos…</div>
+    <div id="metodologia-contenido" hidden>
+
+      <h3>Supuestos declarados</h3>
+      <p class="descripcion" id="supuestos-intro"></p>
+      <div class="tabla-scroll">
+        <table class="datos" id="tabla-supuestos">
+          <caption id="supuestos-caption"></caption>
+          <thead>
+            <tr>
+              <th class="izq" scope="col">Supuesto</th>
+              <th class="izq" scope="col">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-supuestos-cuerpo"></tbody>
+        </table>
+      </div>
+
+      <div class="bloque">
+        <h3>Reglas de limpieza</h3>
+        <p class="descripcion">Cada corrección queda en el log de hallazgos con el id de su regla, el registro afectado, el valor original y el corregido (sección 6).</p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-reglas">
+            <caption>Reglas R01–R12 y las dos reglas de consolidación (art. 32 y goleo publicado).</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Regla</th>
+                <th class="izq" scope="col">Qué hace</th>
+                <th scope="col">Hallazgos</th>
+                <th class="izq" scope="col">Hojas</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-reglas-cuerpo"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bloque">
+        <h3>Cómo reproducir</h3>
+        <p class="descripcion">Requiere Python 3.12. El pipeline lee el Excel de <code>data/raw/</code>, aplica las reglas, regenera los JSON de <code>site/data/</code> y las pruebas comparan los resultados con los valores de control del reglamento.</p>
+<pre class="bloque-codigo"><code>pip install -r requirements.txt
+python pipeline/build.py
+pytest</code></pre>
+      </div>
+
+      <div class="bloque">
+        <h3>Uso de IA</h3>
+        <p>Este proyecto se construyó con ayuda de Claude (Claude Code): análisis de los datos, pipeline en Python y este sitio. Los valores se verificaron contra los datos reales antes de publicarse: los valores de control del reglamento corren como pruebas automáticas (<code>pytest</code>) y las cifras del sitio salen del pipeline.</p>
+        <p>Los supuestos y el contenido de la Parte 2 los decidió y validó la persona que entrega la prueba. Los errores que aparecieron en la revisión (por ejemplo, una causa raíz mal atribuida en la Parte 2) se corrigieron y quedan en el historial de commits.</p>
+      </div>
+
+      <div class="bloque">
+        <h3>Descargar los datos</h3>
+        <p class="descripcion">Los mismos archivos que alimentan este sitio, en JSON.</p>
+        <ul class="descargas" id="lista-descargas"></ul>
+      </div>
+
+    </div>
   </section>
 
 </div>
@@ -828,6 +905,26 @@ const ARCHIVOS = {
   findings_log: 'data/findings_log.json',
   meta:         'data/meta.json',
   parte2:       'data/parte2.md',
+};
+
+// Reglas de limpieza (CLAUDE.md §5 y §6): nombre corto y qué hace. Es documentación
+// estática; los conteos por regla salen de findings_log.json. La usan las
+// secciones 6 (Calidad de datos) y 9 (Metodología).
+const REGLAS_LIMPIEZA = {
+  R01: { nombre: 'Nombres de equipo', detalle: 'Normaliza las variantes de nombre de equipo y las valida contra los 12 nombres de la hoja Equipos.' },
+  R02: { nombre: 'Fechas mixtas', detalle: 'Parsea fechas aaaa-mm-dd y dd/mm/aaaa por patrón (nunca con dayfirst global) y valida una sola fecha por jornada.' },
+  R03: { nombre: 'Partido duplicado', detalle: 'Elimina el partido repetido (misma jornada, local y visitante).' },
+  R04: { nombre: 'Partido no jugado', detalle: 'Excluye los partidos con estatus Suspendido; el marcador capturado no es válido.' },
+  R05: { nombre: 'Llave de jugador', detalle: 'Cruza alineaciones y eventos por (equipo, dorsal) hacia id_jugador, nunca por nombre.' },
+  R06: { nombre: 'Autogoles', detalle: 'Acredita el gol al rival y no lo cuenta para el goleo individual.' },
+  R07: { nombre: 'Marcador vs eventos', detalle: 'El marcador de la cédula es el oficial; concilia contra los eventos y registra la diferencia.' },
+  R08: { nombre: 'Eventos duplicados', detalle: 'Quita eventos repetidos (mismo partido, jugador, minuto y tipo).' },
+  R09: { nombre: 'Eventos imposibles', detalle: 'Detecta eventos de un jugador posteriores a su propia roja; se registran sin eliminarse.' },
+  R10: { nombre: 'Doble amarilla sin roja', detalle: 'Detecta jugadores con 2 amarillas en un partido; se tratan como expulsión (confirmado por la empresa).' },
+  R11: { nombre: 'Elegibilidad por registro', detalle: 'Marca a los alineados fuera de su ventana de registro o con alta posterior al cierre.' },
+  R12: { nombre: 'Datos posteriores al corte', detalle: 'Marca los registros posteriores al corte de datos; se conservan.' },
+  ART32: { nombre: 'Alineación indebida (art. 32)', detalle: 'Aplica de oficio el art. 32: el infractor pierde 3-0 (o se conserva un marcador peor).' },
+  GOLEO_PUBLICADO: { nombre: 'Errores del goleo publicado', detalle: 'Documenta cada diferencia entre el goleo publicado y el correcto.' },
 };
 
 // Inspeccionable desde la consola del navegador.
@@ -1749,14 +1846,10 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 
 <script>
 (function seccionCalidad() {
-  // Nombres cortos de las reglas (CLAUDE.md §5); una regla sin nombre se muestra por su id.
-  const REGLA_NOMBRE = {
-    R01: 'Nombres de equipo', R02: 'Fechas mixtas', R03: 'Partido duplicado', R04: 'Partido no jugado',
-    R05: 'Llave de jugador', R06: 'Autogoles', R07: 'Marcador vs eventos', R08: 'Eventos duplicados',
-    R09: 'Eventos imposibles', R10: 'Doble amarilla sin roja', R11: 'Elegibilidad por registro',
-    R12: 'Datos posteriores al corte', ART32: 'Alineación indebida (art. 32)',
-    GOLEO_PUBLICADO: 'Errores del goleo publicado',
-  };
+  // Nombres cortos de las reglas: salen de REGLAS_LIMPIEZA (compartido con la sección 9);
+  // una regla sin nombre se muestra por su id.
+  const REGLA_NOMBRE = Object.fromEntries(
+    Object.entries(REGLAS_LIMPIEZA).map(([id, r]) => [id, r.nombre]));
   const ACCION = {
     corrected: 'Corregido', flagged: 'Marcado', documented_no_action: 'Documentado, sin cambio',
     deduplicated: 'Duplicado eliminado', excluded: 'Excluido',
@@ -2151,9 +2244,153 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('metodologia', ['meta'], (meta) =>
-  `${Object.keys(meta.supuestos).length} supuestos declarados y ` +
-  `${meta.conteos.jugadores} jugadores en el registro.`);
+(function seccionMetodologia() {
+  const DESCARGAS_PRINCIPALES = [
+    ['matches', 'Partidos limpios', 'partidos válidos y excluidos, con la fecha ya parseada'],
+    ['findings_log', 'Log de hallazgos', 'cada corrección con su regla, valor original y valor corregido'],
+  ];
+  const DESCARGAS_CALCULADAS = [
+    ['standings', 'Tablas de posiciones'], ['scorers', 'Goleo'], ['stats', 'Estadísticas'],
+    ['discipline', 'Disciplina'], ['j11', 'Escenarios de la jornada 11'], ['meta', 'Procedencia y supuestos'],
+  ];
+
+  const esObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+  // Valor primitivo o lista → texto. Una lista de más de un elemento se numera porque
+  // el orden importa (p. ej. los criterios de desempate).
+  function texto(v) {
+    if (Array.isArray(v)) {
+      return v.length > 1 ? v.map((x, i) => `${i + 1}. ${x}`).join(' · ') : v.map(String).join('');
+    }
+    return String(v);
+  }
+
+  function celdaValor(v) {
+    const td = document.createElement('td');
+    td.className = 'izq valor';
+    if (esObjeto(v)) {
+      Object.entries(v).forEach(([k, x]) => {
+        const linea = document.createElement('span');
+        linea.className = 'sub';
+        const clave = document.createElement('code');
+        clave.textContent = k;
+        const valor = document.createElement('code');
+        valor.textContent = texto(x);
+        linea.append(clave, document.createTextNode(': '), valor);
+        td.append(linea);
+      });
+    } else {
+      const code = document.createElement('code');
+      code.textContent = texto(v);
+      td.append(code);
+    }
+    return td;
+  }
+
+  function renderSupuestos(supuestos) {
+    const entradas = Object.entries(supuestos);
+    document.getElementById('supuestos-intro').textContent =
+      'Todo supuesto se declara en config/assumptions.yaml y el pipeline lo lee de ahí. ' +
+      'Se muestran juntos, en el orden del archivo: en sus comentarios se indica cuáles son ' +
+      'respuestas confirmadas por la empresa y cuáles son supuestos propios.';
+    document.getElementById('supuestos-caption').textContent =
+      `${entradas.length} supuestos, tal como los recibió el pipeline (meta.json).`;
+    const cuerpo = document.getElementById('tabla-supuestos-cuerpo');
+    entradas.forEach(([clave, valor], i) => {
+      const tr = document.createElement('tr');
+      if (i % 2 === 1) tr.className = 'par';
+      const tdClave = document.createElement('td');
+      tdClave.className = 'izq';
+      const code = document.createElement('code');
+      code.textContent = clave;
+      tdClave.append(code);
+      tr.append(tdClave, celdaValor(valor));
+      cuerpo.append(tr);
+    });
+  }
+
+  function renderReglas(hallazgos) {
+    const porRegla = new Map();
+    hallazgos.forEach((h) => {
+      if (!porRegla.has(h.rule_id)) porRegla.set(h.rule_id, { n: 0, hojas: new Set() });
+      const r = porRegla.get(h.rule_id);
+      r.n += 1;
+      r.hojas.add(h.sheet);
+    });
+    // Las reglas documentadas, en su orden; y al final cualquiera que el log traiga y no esté documentada.
+    const ids = [...Object.keys(REGLAS_LIMPIEZA), ...[...porRegla.keys()].filter((id) => !(id in REGLAS_LIMPIEZA))];
+    const cuerpo = document.getElementById('tabla-reglas-cuerpo');
+    ids.forEach((id, i) => {
+      const def = REGLAS_LIMPIEZA[id] || { nombre: id, detalle: '' };
+      const r = porRegla.get(id);
+      const tr = document.createElement('tr');
+      if (i % 2 === 1) tr.className = 'par';
+      const tdRegla = document.createElement('td');
+      tdRegla.className = 'izq';
+      const strong = document.createElement('strong');
+      strong.textContent = id;
+      const nombre = document.createElement('span');
+      nombre.className = 'nota-fila';
+      nombre.textContent = def.nombre;
+      tdRegla.append(strong, nombre);
+      const tdDetalle = document.createElement('td');
+      tdDetalle.className = 'detalle';
+      tdDetalle.textContent = def.detalle;
+      const tdN = document.createElement('td');
+      tdN.textContent = r ? r.n : 0;
+      const tdHojas = document.createElement('td');
+      tdHojas.className = 'izq';
+      tdHojas.textContent = r ? [...r.hojas].join(', ') : '—';
+      tr.append(tdRegla, tdDetalle, tdN, tdHojas);
+      cuerpo.append(tr);
+    });
+  }
+
+  function renderDescargas() {
+    const lista = document.getElementById('lista-descargas');
+    const enlace = (clave, etiqueta) => {
+      const a = document.createElement('a');
+      a.href = ARCHIVOS[clave];
+      a.download = '';
+      a.textContent = `${etiqueta} (${ARCHIVOS[clave]})`;
+      return a;
+    };
+    DESCARGAS_PRINCIPALES.forEach(([clave, etiqueta, nota]) => {
+      const li = document.createElement('li');
+      const n = document.createElement('span');
+      n.className = 'nota-descarga';
+      n.textContent = ` — ${nota}`;
+      li.append(enlace(clave, etiqueta), n);
+      lista.append(li);
+    });
+    const li = document.createElement('li');
+    li.append(document.createTextNode('Resultados calculados: '));
+    DESCARGAS_CALCULADAS.forEach(([clave, etiqueta], i) => {
+      if (i) li.append(document.createTextNode(' · '));
+      const a = document.createElement('a');
+      a.href = ARCHIVOS[clave];
+      a.download = '';
+      a.textContent = etiqueta;
+      li.append(a);
+    });
+    lista.append(li);
+  }
+
+  Promise.all([cargarDatos('meta'), cargarDatos('findings_log')])
+    .then(([meta, hallazgos]) => {
+      renderSupuestos(meta.supuestos);
+      renderReglas(hallazgos);
+      renderDescargas();
+      document.querySelector('[data-seccion="metodologia"]').hidden = true;
+      document.getElementById('metodologia-contenido').hidden = false;
+    })
+    .catch((error) => {
+      const caja = document.querySelector('[data-seccion="metodologia"]');
+      caja.className = 'placeholder error';
+      caja.innerHTML = describirError(error);
+      console.error('[metodologia]', error);
+    });
+})();
 </script>
 
 </body>
