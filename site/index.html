@@ -9,6 +9,7 @@
 :root {
   --nav-ancho: 240px;
   --nav-alto-movil: 56px;
+  --tabs-alto: 48px; /* barra fija de vistas (Dashboard / Informe completo) */
   --fuente: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --fuente-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
@@ -98,7 +99,7 @@ a { color: var(--acento); }
 /* ---------- Navegación (escritorio primero) ---------- */
 .nav {
   position: fixed;
-  inset: 0 auto 0 0;
+  inset: var(--tabs-alto) auto 0 0;
   width: var(--nav-ancho);
   background: var(--bg-sutil);
   overflow-y: auto;
@@ -132,14 +133,14 @@ a { color: var(--acento); }
 .nav-lista a[aria-current="true"] .nav-numero { color: var(--acento); }
 
 /* ---------- Contenido ---------- */
-main { margin-left: var(--nav-ancho); }
+main { margin-left: var(--nav-ancho); padding-top: var(--tabs-alto); }
 .contenido { max-width: 1200px; margin: 0 auto; padding: 3rem 2.5rem 5rem; }
 
 .portada { margin-bottom: 3.5rem; }
 .portada h1 { font-size: 2rem; }
 .portada .bajada { color: var(--texto-suave); font-size: 1.05rem; max-width: 65ch; }
 
-section { scroll-margin-top: 1.5rem; margin-bottom: 3.5rem; }
+section { scroll-margin-top: calc(var(--tabs-alto) + 1.5rem); margin-bottom: 3.5rem; }
 .descripcion { color: var(--texto-suave); max-width: 70ch; }
 
 /* ---------- Placeholder de carga ---------- */
@@ -400,6 +401,59 @@ details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
   color: var(--texto-suave);
 }
 
+/* ---------- Barra de vistas (Dashboard / Informe completo) ---------- */
+.barra-vistas {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--tabs-alto);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0 1.25rem;
+  background: var(--bg-elevado);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+}
+.barra-marca { font-size: .9rem; font-weight: 650; white-space: nowrap; }
+.barra-marca span { color: var(--texto-suave); font-weight: 400; margin-left: .5rem; }
+.tabs-vista { display: flex; gap: .35rem; }
+.tab-vista {
+  font: inherit;
+  font-size: .88rem;
+  padding: .35rem .9rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.tab-vista:hover { color: var(--texto); }
+.tab-vista[aria-selected="true"] {
+  background: var(--acento-suave);
+  border-color: var(--acento);
+  color: var(--acento);
+  font-weight: 600;
+}
+.tab-vista:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.tab-vista[hidden] { display: none; }
+
+/* Panel inactivo: sigue maquetado pero invisible. Con display:none, Mermaid y
+   Chart.js medirían 0 al dibujar; así el Informe se comporta igual esté o no a la vista. */
+.vista-inactiva {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  .barra-marca { display: none; }
+  .barra-vistas { padding: 0 .75rem; }
+}
+
 /* ---------- Pie ---------- */
 footer {
   margin-left: var(--nav-ancho);
@@ -412,7 +466,7 @@ footer {
 /* ---------- Celular ---------- */
 @media (max-width: 899px) {
   .nav {
-    inset: 0 0 auto 0;
+    inset: var(--tabs-alto) 0 auto 0;
     width: 100%;
     height: auto;
     padding: 0;
@@ -446,16 +500,16 @@ footer {
     display: none;
     padding: .5rem 0 1rem;
     background: var(--bg-sutil);
-    max-height: calc(100vh - var(--nav-alto-movil));
+    max-height: calc(100vh - var(--nav-alto-movil) - var(--tabs-alto));
     overflow-y: auto;
   }
   .nav.abierto .nav-lista { display: block; }
 
-  main { margin-left: 0; padding-top: var(--nav-alto-movil); }
+  main { margin-left: 0; padding-top: calc(var(--nav-alto-movil) + var(--tabs-alto)); }
   .contenido { padding: 2rem 1.25rem 4rem; }
   .portada h1 { font-size: 1.6rem; }
   h2 { font-size: 1.35rem; }
-  section { scroll-margin-top: calc(var(--nav-alto-movil) + 1rem); }
+  section { scroll-margin-top: calc(var(--nav-alto-movil) + var(--tabs-alto) + 1rem); }
 
   footer { margin-left: 0; }
   .pie-interior { padding: 1.5rem 1.25rem; }
@@ -472,6 +526,21 @@ footer {
 <body>
 
 <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
+
+<header class="barra-vistas">
+  <div class="barra-marca">Liga Municipal<span>Apertura 2026</span></div>
+  <div class="tabs-vista" id="tabs-vista" role="tablist" aria-label="Vista del sitio">
+    <button type="button" class="tab-vista" role="tab" id="tab-dashboard" data-vista="dashboard"
+            aria-controls="vista-dashboard" aria-selected="false" tabindex="-1">Dashboard</button>
+    <button type="button" class="tab-vista" role="tab" id="tab-informe" data-vista="informe"
+            aria-controls="vista-informe" aria-selected="true">Informe completo</button>
+  </div>
+</header>
+
+<!-- Vista Dashboard: se rellena con su propio script; el Informe queda intacto dentro de #vista-informe. -->
+<div id="vista-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" class="vista-inactiva" inert></div>
+
+<div id="vista-informe" role="tabpanel" aria-labelledby="tab-informe">
 
 <nav class="nav" id="nav" aria-label="Secciones del informe">
   <div class="nav-encabezado">
@@ -924,6 +993,8 @@ pytest</code></pre>
   <div class="pie-interior" id="pie">Cargando procedencia de los datos…</div>
 </footer>
 
+</div><!-- /#vista-informe -->
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
 
@@ -1114,15 +1185,91 @@ cargarDatos('meta')
 <!-- ============ Un script por sección: solo carga de datos ============ -->
 
 <script>
-(function seccionResumen() {
-  const COLUMNAS = [['PJ', 'pj'], ['G', 'g'], ['E', 'e'], ['P', 'p'], ['GF', 'gf'], ['GC', 'gc'], ['DG', 'dg'], ['Pts', 'pts']];
-  const ENLACES = [
-    ['#posiciones', 'Tabla de posiciones'], ['#goleo', 'Goleo'], ['#disciplina', 'Disciplina'],
-    ['#calidad', 'Calidad de datos'], ['#proceso', 'Proceso actual vs propuesto'], ['#mejoras', 'Mejoras'],
-  ];
+/* Barra de vistas: Dashboard | Informe completo.
+   El hash manda: #dashboard (o vacío) abre el Dashboard; #informe o el id de
+   cualquier sección (#posiciones, #calidad…) abre el Informe y baja a esa sección.
+   Así los enlaces existentes y los "Ver … →" de las tarjetas siguen siendo simples
+   anclas, y el botón Atrás del navegador funciona. Mientras el panel del Dashboard
+   no tenga contenido, la barra de pestañas se oculta y el Informe es la única vista. */
+(function vistas() {
+  const paneles = {
+    dashboard: document.getElementById('vista-dashboard'),
+    informe: document.getElementById('vista-informe'),
+  };
+  const tabs = {
+    dashboard: document.getElementById('tab-dashboard'),
+    informe: document.getElementById('tab-informe'),
+  };
+  const lista = document.getElementById('tabs-vista');
+  const salto = document.querySelector('.salto-contenido');
+  const idsInforme = new Set([...paneles.informe.querySelectorAll('section[id]')].map((s) => s.id));
+  const dashboardListo = paneles.dashboard.childElementCount > 0; // marcado estático, no datos
+  const scrollGuardado = { dashboard: 0, informe: 0 };
+  let actual = null;
 
+  lista.hidden = !dashboardListo;
+
+  const idDeHash = () => decodeURIComponent(location.hash.replace(/^#/, ''));
+
+  function vistaDeHash() {
+    const id = idDeHash();
+    if (id === 'informe' || idsInforme.has(id)) return 'informe';
+    return dashboardListo ? 'dashboard' : 'informe';
+  }
+
+  function mostrar(vista) {
+    if (actual) scrollGuardado[actual] = window.scrollY;
+    actual = vista;
+    Object.entries(paneles).forEach(([nombre, panel]) => {
+      const activo = nombre === vista;
+      panel.classList.toggle('vista-inactiva', !activo);
+      panel.toggleAttribute('inert', !activo);
+      tabs[nombre].setAttribute('aria-selected', String(activo));
+      tabs[nombre].tabIndex = activo ? 0 : -1;
+    });
+    salto.setAttribute('href', vista === 'informe' ? '#contenido' : '#contenido-dashboard');
+    window.dispatchEvent(new CustomEvent('vista-cambiada', { detail: vista }));
+  }
+
+  function sincronizar(desdeCarga) {
+    const vista = vistaDeHash();
+    const cambio = vista !== actual;
+    if (cambio) mostrar(vista);
+    if (!cambio && !desdeCarga) return;
+    const destino = idsInforme.has(idDeHash()) ? document.getElementById(idDeHash()) : null;
+    if (destino) requestAnimationFrame(() => destino.scrollIntoView());
+    else window.scrollTo({ top: desdeCarga ? 0 : scrollGuardado[vista], behavior: 'instant' });
+  }
+
+  Object.entries(tabs).forEach(([nombre, tab]) => {
+    tab.addEventListener('click', () => { location.hash = nombre === 'dashboard' ? '#dashboard' : '#informe'; });
+  });
+  lista.addEventListener('keydown', (ev) => {
+    const orden = ['dashboard', 'informe'];
+    const i = orden.indexOf(actual);
+    const destino = {
+      ArrowRight: orden[(i + 1) % orden.length],
+      ArrowLeft: orden[(i - 1 + orden.length) % orden.length],
+      Home: orden[0],
+      End: orden[orden.length - 1],
+    }[ev.key];
+    if (!destino) return;
+    ev.preventDefault();
+    tabs[destino].focus();
+    location.hash = destino === 'dashboard' ? '#dashboard' : '#informe';
+  });
+  window.addEventListener('hashchange', () => sincronizar(false));
+  sincronizar(true);
+})();
+</script>
+
+<script>
+/* Componentes compartidos entre el Resumen (sección 1) y el Dashboard: el medidor
+   circular, su cálculo y los datos de cada tarjeta. Un solo espacio de nombres
+   (`Comp`) para no chocar con las constantes de las demás secciones. */
+const Comp = (function () {
+  const COLUMNAS = [['PJ', 'pj'], ['G', 'g'], ['E', 'e'], ['P', 'p'], ['GF', 'gf'], ['GC', 'gc'], ['DG', 'dg'], ['Pts', 'pts']];
   const lista = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}` : xs.join(''));
-  const enMinuscula = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
   // Compara la tabla publicada con la del escenario elegido. "Equipo con error" =
   // alguna de sus cifras (PJ, G, E, P, GF, GC, DG, Pts) difiere de la publicada.
@@ -1305,6 +1452,20 @@ cargarDatos('meta')
     });
     return [incumplidas, alineacion, goleoM];
   }
+
+  return { COLUMNAS, lista, el, compararTabla, medidor, datosTabla, medidoresFijos };
+})();
+</script>
+
+<script>
+(function seccionResumen() {
+  const ENLACES = [
+    ['#posiciones', 'Tabla de posiciones'], ['#goleo', 'Goleo'], ['#disciplina', 'Disciplina'],
+    ['#calidad', 'Calidad de datos'], ['#proceso', 'Proceso actual vs propuesto'], ['#mejoras', 'Mejoras'],
+  ];
+
+  const enMinuscula = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+  const { lista, el, compararTabla, medidor, datosTabla, medidoresFijos } = Comp;
 
   // Todo número del párrafo sale de los datos; siempre usa el escenario oficial.
   function historia(standings, disciplina, hallazgos, mejoras) {
