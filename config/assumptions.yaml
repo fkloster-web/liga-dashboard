@@ -1,0 +1,98 @@
+# Supuestos del pipeline — Torneo Apertura 2026, Liga Municipal de Fútbol Amateur
+#
+# Todo número publicado en el sitio debe originarse en este archivo + el pipeline
+# (pipeline/*.py). No hay supuestos hardcodeados en el código.
+
+# --- Respuestas confirmadas por la empresa (CLAUDE.md sección 6) ---
+
+cutoff_date: 2026-09-01
+registration_close: 2026-08-08          # fin de J5; usado SOLO para R11 (alta de jugadores)
+double_yellow_is_red: true              # confirmado
+ineligible_if_in_lineup: true           # confirmado (jugó = aparece en Alineaciones)
+late_served_suspension_is_valid: false  # confirmado
+suspension_scope: next_match_only       # SUPUESTO propio del candidato, validado por la empresa:
+                                         # la suspensión corresponde solo al siguiente partido disputado;
+                                         # si se viola, la consecuencia es el art. 32 en ese partido (no se arrastra)
+art32_sanction: forfeit_3_0_keep_worse  # confirmado
+art32_goals_count_for_scorers: true     # confirmado
+tiebreakers: [head_to_head_or_minitable, goal_diff, goals_for, fewer_reds, draw]  # confirmado
+reds_for_tiebreak: direct_reds_only     # SUPUESTO: solo rojas directas registradas (no se usa en el corte actual)
+yellows_in_red_match_count_for_accumulation: true  # SUPUESTO; no cambia ningún caso actual
+scorers_tie_policy: shared_rank         # confirmado
+p042_rescheduled: pending               # confirmado
+stats_use_field_score: true             # SUPUESTO: estadísticas de juego (goles, local/visitante) con marcador en cancha;
+                                         # la tabla usa el resultado oficial tras art. 32
+
+# --- Supuestos propios adicionales (ingeniería, declarados para transparencia) ---
+
+tiebreak_cascade_on_unresolved_group: recursive_narrowing
+  # Si la minitabla de puntos (art.18 paso 2) no separa completamente a un grupo de 3+,
+  # se reaplica la cascada (dif. de goles general -> goles a favor -> menos rojas -> sorteo)
+  # SOLO sobre el subgrupo aún empatado en cada paso, no sobre la tabla completa.
+
+art32_keep_worse_threshold_goals: 3
+  # "keep_worse" (confirmado) compara el déficit REAL en cancha del infractor
+  # (goles_en_contra_reales - goles_a_favor_reales, solo si es positivo) contra este umbral.
+  # Si déficit_real > 3 -> se conserva el marcador real; si <= 3 -> se aplica 3-0/0-3.
+  # Ningún caso real activa esta rama (déficit máximo real es 3); requiere fixture sintética.
+
+art32_multi_infractor_same_team_policy: single_forfeit_not_cumulative
+  # Si 2+ jugadores del mismo equipo, mismo partido, son infractores de art.32
+  # (ej. P044: Rodrigo Anaya Lozano + Héctor Reyes Lozano, Santa Tere), el forfeit se
+  # aplica UNA sola vez (3-0). La detección de infractores es independiente (ambos
+  # quedan en el log de disciplina); solo la corrección de marcador es idempotente.
+
+next_match_filter:
+  exclude_status: [Suspendido]
+  require_date: true
+  # Define "siguiente partido disputado" para suspension_scope=next_match_only: se recorre
+  # el calendario del equipo del infractor en orden de jornada, se descartan partidos con
+  # estatus=Suspendido (ej. P042) y partidos sin fecha asignada; el primero que cumple
+  # ambos filtros es el partido donde se exige el cumplimiento.
+
+double_yellow_suspension_anchor: second_yellow_match
+  # La suspensión por doble amarilla se ancla al partido donde ocurrió la 2a amarilla
+  # (mismo tratamiento que una roja real para efectos de "siguiente partido disputado").
+
+post_red_own_yellow_treatment: ignore_for_accumulation_keep_in_log
+  # Caso R09 (ej. Raúl Reyes Chávez, P053: roja min 56, amarilla min 86 del MISMO jugador
+  # en el MISMO partido): es un error de captura, un jugador expulsado no puede ser
+  # amonestado después. Esa amarilla NO cuenta para la acumulación de 5 amarillas del
+  # jugador, pero se conserva en el log de hallazgos (R09) para auditoría, no se borra.
+
+cutoff_dates_usage:
+  registration_close: "solo R11 (elegibilidad por alta de jugador)"
+  cutoff_date: "solo R12 (marca de registros posteriores al corte de datos)"
+  # `registration_close` NO limita el conteo de acumulación de amarillas: se verificó
+  # contra los datos reales que el único caso de acumulación (Rodrigo Anaya Lozano,
+  # Club Santa Tere) alcanza su 5a amarilla en J7, después del cierre de registro (J5).
+  # Son dos conceptos distintos: cierre de registro de jugadores vs. corte de captura.
+
+accumulation_trigger_source: computed_from_events_running_tally
+  # SUPUESTO revisado tras validar contra el Excel real: la hoja Sanciones (8 filas) NO
+  # contiene ningún caso de acumulación (las 8 filas son todas "Tarjeta roja"); el único
+  # caso de acumulación (Rodrigo Anaya Lozano) debe detectarse contando amarillas
+  # individuales por jugador en orden cronológico (jornada, luego minuto) a lo largo de
+  # TODA la temporada disputada, sin límite de fecha. No se usa `registration_close` ni
+  # `cutoff_date` para esto.
+
+sanciones_sheet_role: compliance_timing_for_red_cards_only
+  # La hoja Sanciones (8 filas, todas motivo "Tarjeta roja") es fuente de verdad SOLO
+  # para la métrica de "cumplido a tiempo" (fecha_sesion / fecha_notificacion) de las
+  # rojas directas. NO es fuente de los triggers de roja (vienen de Eventos), de las
+  # dobles amarillas (inferidas de Eventos), ni de la acumulación (inferida de Eventos).
+
+home_away_bias_disclosure: report_raw_counts_no_inference
+  # El pipeline exporta conteos crudos de local/visitante por equipo sin calcular una
+  # métrica de "ventaja de local", porque el calendario está desbalanceado y no es
+  # aleatorio. Es el sitio, no el pipeline, quien debe mostrar esta nota de precaución.
+
+stats_test_config:
+  kruskal_alternative_note: "scipy.stats.kruskal (prueba omnibus, sin parámetro alternative)"
+  mannwhitney_alternative: two-sided
+  mannwhitney_use_continuity: true
+  bonferroni_m: 5
+  # Parámetros explícitos de scipy para reproducir los p-values documentados (Kruskal-Wallis
+  # ≈0.13; Mann-Whitney Villa vs resto ≈0.035 sin corregir, ≈0.17 con Bonferroni×5). Si scipy
+  # con estos parámetros no reproduce el valor dentro de tolerancia, es un hallazgo a
+  # reportar, no un motivo para cambiar el test.
