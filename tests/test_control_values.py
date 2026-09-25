@@ -806,13 +806,25 @@ class TestPipelineCompleto:
         assert nombres == {
             "standings.json", "scorers.json", "stats.json", "discipline.json",
             "j11.json", "matches.json", "findings_log.json", "meta.json",
+            "parte2.md",
         }
+
+    def test_copia_el_contenido_de_la_parte2(self, resultado, tmp_path):
+        """config/parte2.md queda fuera de site/, que es la raíz publicada: el
+        pipeline lo copia junto a los JSON para que el sitio pueda leerlo."""
+        build.write_outputs(resultado, tmp_path)
+        copia = tmp_path / "parte2.md"
+        assert copia.exists()
+        assert copia.read_text(encoding="utf-8") == build.PARTE2_SRC.read_text(encoding="utf-8")
+        assert "Mejoras priorizadas" in copia.read_text(encoding="utf-8")
 
     def test_los_json_son_estrictamente_validos(self, resultado, tmp_path):
         def rechaza_no_json(constante):
             raise AssertionError(f"valor no serializable en JSON: {constante}")
 
-        for destino in build.write_outputs(resultado, tmp_path):
+        escritos = [p for p in build.write_outputs(resultado, tmp_path) if p.suffix == ".json"]
+        assert len(escritos) == 8
+        for destino in escritos:
             json.loads(destino.read_text(encoding="utf-8"), parse_constant=rechaza_no_json)
 
     def test_contrato_de_standings(self, resultado, tmp_path):

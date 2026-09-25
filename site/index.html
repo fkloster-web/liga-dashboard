@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liga Municipal de Fútbol Amateur — Apertura 2026</title>
+<style>
+/* ---------- Paleta ---------- */
+:root {
+  --nav-ancho: 240px;
+  --nav-alto-movil: 56px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --bg: #ffffff;
+  --bg-sutil: #f6f7f9;
+  --bg-elevado: #ffffff;
+  --texto: #1a1d21;
+  --texto-suave: #5b6570;
+  --borde: #e4e7eb;
+  --acento: #2563eb;
+  --acento-suave: #eef3ff;
+  --error: #b42318;
+  --error-bg: #fdf2f1;
+  --correcto: #15803d;
+  --aviso-bg: #fff8e8;
+  --aviso-texto: #7a5a12;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15181c;
+    --bg-sutil: #1b1f24;
+    --bg-elevado: #1f242a;
+    --texto: #e7eaee;
+    --texto-suave: #9aa4ae;
+    --borde: #2b3138;
+    --acento: #7aa5ff;
+    --acento-suave: #1b2740;
+    --error: #f8836f;
+    --error-bg: #2a1a18;
+    --correcto: #5cd48a;
+    --aviso-bg: #2a2413;
+    --aviso-texto: #e0c481;
+  }
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--texto);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { line-height: 1.25; font-weight: 650; margin: 0 0 .5rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.15rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--acento); }
+
+.salto-contenido {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--acento);
+  color: #fff;
+  padding: .6rem 1rem;
+  z-index: 100;
+}
+.salto-contenido:focus { left: .5rem; top: .5rem; }
+
+/* ---------- Navegación (escritorio primero) ---------- */
+.nav {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--nav-ancho);
+  background: var(--bg-sutil);
+  overflow-y: auto;
+  padding: 1.5rem 0;
+  z-index: 20;
+}
+
+.nav-encabezado { padding: 0 1.25rem 1.25rem; }
+.nav-titulo { font-size: .95rem; font-weight: 650; margin: 0; }
+.nav-subtitulo { font-size: .8rem; color: var(--texto-suave); margin: .15rem 0 0; }
+
+.nav-boton { display: none; }
+
+.nav-lista { list-style: none; margin: 0; padding: 0; }
+
+.nav-lista a {
+  display: flex;
+  gap: .6rem;
+  padding: .5rem 1.25rem;
+  font-size: .9rem;
+  color: var(--texto-suave);
+  text-decoration: none;
+}
+.nav-lista a:hover { color: var(--texto); background: var(--acento-suave); }
+.nav-lista a[aria-current="true"] {
+  color: var(--acento);
+  background: var(--acento-suave);
+  font-weight: 600;
+}
+.nav-numero { color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.nav-lista a[aria-current="true"] .nav-numero { color: var(--acento); }
+
+/* ---------- Contenido ---------- */
+main { margin-left: var(--nav-ancho); }
+.contenido { max-width: 1200px; margin: 0 auto; padding: 3rem 2.5rem 5rem; }
+
+.portada { margin-bottom: 3.5rem; }
+.portada h1 { font-size: 2rem; }
+.portada .bajada { color: var(--texto-suave); font-size: 1.05rem; max-width: 65ch; }
+
+section { scroll-margin-top: 1.5rem; margin-bottom: 3.5rem; }
+.descripcion { color: var(--texto-suave); max-width: 70ch; }
+
+/* ---------- Placeholder de carga ---------- */
+.placeholder {
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  font-size: .9rem;
+  background: var(--bg-sutil);
+  color: var(--texto-suave);
+}
+.placeholder.listo { color: var(--texto); }
+.placeholder.listo .marca { color: var(--correcto); font-weight: 650; }
+.placeholder.error { background: var(--error-bg); color: var(--error); }
+.placeholder.error .marca { font-weight: 650; }
+.placeholder code {
+  font-family: var(--fuente-mono);
+  font-size: .85em;
+  background: var(--bg-elevado);
+  padding: .1rem .35rem;
+  border-radius: 4px;
+}
+.placeholder .detalle { display: block; margin-top: .4rem; }
+
+/* ---------- Pie ---------- */
+footer {
+  margin-left: var(--nav-ancho);
+  background: var(--bg-sutil);
+  color: var(--texto-suave);
+  font-size: .85rem;
+}
+.pie-interior { max-width: 1200px; margin: 0 auto; padding: 2rem 2.5rem; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 899px) {
+  .nav {
+    inset: 0 0 auto 0;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+  }
+  .nav-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: var(--nav-alto-movil);
+    padding: 0 1rem;
+  }
+  .nav-subtitulo { display: none; }
+
+  .nav-boton {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: none;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    color: var(--texto);
+    font: inherit;
+    font-size: .85rem;
+    padding: .35rem .7rem;
+    cursor: pointer;
+  }
+
+  .nav-lista {
+    display: none;
+    padding: .5rem 0 1rem;
+    background: var(--bg-sutil);
+    max-height: calc(100vh - var(--nav-alto-movil));
+    overflow-y: auto;
+  }
+  .nav.abierto .nav-lista { display: block; }
+
+  main { margin-left: 0; padding-top: var(--nav-alto-movil); }
+  .contenido { padding: 2rem 1.25rem 4rem; }
+  .portada h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.35rem; }
+  section { scroll-margin-top: calc(var(--nav-alto-movil) + 1rem); }
+
+  footer { margin-left: 0; }
+  .pie-interior { padding: 1.5rem 1.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<a class="salto-contenido" href="#contenido">Saltar al contenido</a>
+
+<nav class="nav" id="nav" aria-label="Secciones del informe">
+  <div class="nav-encabezado">
+    <div>
+      <p class="nav-titulo">Liga Municipal</p>
+      <p class="nav-subtitulo">Apertura 2026 · J1–J10</p>
+    </div>
+    <button class="nav-boton" id="nav-boton" aria-expanded="false" aria-controls="nav-lista">
+      Secciones
+    </button>
+  </div>
+  <ul class="nav-lista" id="nav-lista">
+    <li><a href="#resumen"><span class="nav-numero">1</span> Resumen ejecutivo</a></li>
+    <li><a href="#posiciones"><span class="nav-numero">2</span> Tabla de posiciones</a></li>
+    <li><a href="#goleo"><span class="nav-numero">3</span> Goleo</a></li>
+    <li><a href="#estadisticas"><span class="nav-numero">4</span> Estadísticas</a></li>
+    <li><a href="#disciplina"><span class="nav-numero">5</span> Disciplina</a></li>
+    <li><a href="#calidad"><span class="nav-numero">6</span> Calidad de datos</a></li>
+    <li><a href="#proceso"><span class="nav-numero">7</span> Proceso actual vs propuesto</a></li>
+    <li><a href="#mejoras"><span class="nav-numero">8</span> Mejoras priorizadas</a></li>
+    <li><a href="#metodologia"><span class="nav-numero">9</span> Supuestos y metodología</a></li>
+  </ul>
+</nav>
+
+<main id="contenido">
+<div class="contenido">
+
+  <header class="portada">
+    <h1>Liga Municipal de Fútbol Amateur</h1>
+    <p class="bajada">
+      Torneo Apertura 2026. Revisión de la tabla publicada, el goleo y el proceso
+      disciplinario con datos hasta la jornada 10. Todas las cifras provienen de un
+      pipeline reproducible, verificado con pruebas automáticas.
+    </p>
+  </header>
+
+  <section id="resumen" aria-labelledby="resumen-titulo">
+    <h2 id="resumen-titulo">1. Resumen ejecutivo</h2>
+    <p class="descripcion">Los hallazgos principales y su impacto sobre la liguilla.</p>
+    <div class="placeholder" data-seccion="resumen">Cargando datos…</div>
+  </section>
+
+  <section id="posiciones" aria-labelledby="posiciones-titulo">
+    <h2 id="posiciones-titulo">2. Tabla de posiciones</h2>
+    <p class="descripcion">Tabla oficial frente a la publicada, con el origen de cada diferencia y los escenarios alternativos.</p>
+    <div class="placeholder" data-seccion="posiciones">Cargando datos…</div>
+  </section>
+
+  <section id="goleo" aria-labelledby="goleo-titulo">
+    <h2 id="goleo-titulo">3. Goleo</h2>
+    <p class="descripcion">Goleo correcto frente al publicado, con la explicación de cada diferencia.</p>
+    <div class="placeholder" data-seccion="goleo">Cargando datos…</div>
+  </section>
+
+  <section id="estadisticas" aria-labelledby="estadisticas-titulo">
+    <h2 id="estadisticas-titulo">4. Estadísticas del torneo</h2>
+    <p class="descripcion">Goles, resultados y tarjetas, con la prueba estadística sobre los árbitros.</p>
+    <div class="placeholder" data-seccion="estadisticas">Cargando datos…</div>
+  </section>
+
+  <section id="disciplina" aria-labelledby="disciplina-titulo">
+    <h2 id="disciplina-titulo">5. Disciplina</h2>
+    <p class="descripcion">Línea de tiempo por sanción y lista de incumplimientos.</p>
+    <div class="placeholder" data-seccion="disciplina">Cargando datos…</div>
+  </section>
+
+  <section id="calidad" aria-labelledby="calidad-titulo">
+    <h2 id="calidad-titulo">6. Calidad de datos</h2>
+    <p class="descripcion">Log de hallazgos, filtrable por regla, hoja y severidad.</p>
+    <div class="placeholder" data-seccion="calidad">Cargando datos…</div>
+  </section>
+
+  <section id="proceso" aria-labelledby="proceso-titulo">
+    <h2 id="proceso-titulo">7. Proceso actual vs propuesto</h2>
+    <p class="descripcion">Diagramas por responsable, con los puntos de error marcados.</p>
+    <div class="placeholder" data-seccion="proceso">Cargando datos…</div>
+  </section>
+
+  <section id="mejoras" aria-labelledby="mejoras-titulo">
+    <h2 id="mejoras-titulo">8. Mejoras priorizadas</h2>
+    <p class="descripcion">Cada mejora con su problema, esfuerzo, impacto, riesgo, indicador y meta.</p>
+    <div class="placeholder" data-seccion="mejoras">Cargando datos…</div>
+  </section>
+
+  <section id="metodologia" aria-labelledby="metodologia-titulo">
+    <h2 id="metodologia-titulo">9. Supuestos y metodología</h2>
+    <p class="descripcion">Supuestos declarados, reglas de limpieza, cómo reproducir y uso de IA.</p>
+    <div class="placeholder" data-seccion="metodologia">Cargando datos…</div>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="pie-interior" id="pie">Cargando procedencia de los datos…</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+
+<script>
+/* ============================================================
+   Núcleo: carga de datos, navegación y tema.
+   Las secciones todavía no renderizan nada; solo cargan.
+   ============================================================ */
+
+const ARCHIVOS = {
+  standings:    'data/standings.json',
+  scorers:      'data/scorers.json',
+  stats:        'data/stats.json',
+  discipline:   'data/discipline.json',
+  j11:          'data/j11.json',
+  matches:      'data/matches.json',
+  findings_log: 'data/findings_log.json',
+  meta:         'data/meta.json',
+  parte2:       'data/parte2.md',
+};
+
+// Inspeccionable desde la consola del navegador.
+const DATOS = {};
+window.DATOS = DATOS;
+
+// Memoiza la PROMESA, no el resultado: si tres secciones piden el mismo
+// archivo, se hace una sola petición de red.
+const _promesas = new Map();
+
+function cargarDatos(nombre) {
+  if (!_promesas.has(nombre)) {
+    const ruta = ARCHIVOS[nombre];
+    if (!ruta) throw new Error(`Archivo desconocido: ${nombre}`);
+    const promesa = fetch(ruta)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} al pedir ${ruta}`);
+        return ruta.endsWith('.json') ? r.json() : r.text();
+      })
+      .then((datos) => { DATOS[nombre] = datos; return datos; });
+    _promesas.set(nombre, promesa);
+  }
+  return _promesas.get(nombre);
+}
+
+function describirError(error) {
+  if (location.protocol === 'file:') {
+    return '<span class="marca">No se pudieron cargar los datos.</span>' +
+      '<span class="detalle">La página se abrió como archivo local, y por seguridad el ' +
+      'navegador bloquea <code>fetch</code> sobre <code>file://</code>. Sírvela por HTTP: ' +
+      '<code>cd site &amp;&amp; python -m http.server 8000</code> y abre ' +
+      '<code>http://localhost:8000/</code>.</span>';
+  }
+  return '<span class="marca">No se pudieron cargar los datos.</span>' +
+    `<span class="detalle">${error.message}. Si falta algún archivo, regenera los datos con ` +
+    '<code>python pipeline/build.py</code>.</span>';
+}
+
+/**
+ * Registra una sección: carga sus archivos y reporta el estado en su
+ * placeholder. `resumir` recibe los datos ya cargados y devuelve el texto
+ * de confirmación. Todavía no se renderiza contenido.
+ */
+function registrarSeccion(id, nombres, resumir) {
+  const caja = document.querySelector(`[data-seccion="${id}"]`);
+  if (!caja) return;
+  Promise.all(nombres.map(cargarDatos))
+    .then((datos) => {
+      caja.className = 'placeholder listo';
+      caja.innerHTML = '<span class="marca">Datos cargados.</span> ' +
+        `<span class="detalle">${resumir(...datos)}</span>`;
+    })
+    .catch((error) => {
+      caja.className = 'placeholder error';
+      caja.innerHTML = describirError(error);
+      console.error(`[${id}]`, error);
+    });
+}
+
+/* ---------- Navegación ---------- */
+(function navegacion() {
+  const nav = document.getElementById('nav');
+  const boton = document.getElementById('nav-boton');
+  const enlaces = Array.from(document.querySelectorAll('.nav-lista a'));
+
+  boton.addEventListener('click', () => {
+    const abierto = nav.classList.toggle('abierto');
+    boton.setAttribute('aria-expanded', String(abierto));
+  });
+
+  enlaces.forEach((enlace) => enlace.addEventListener('click', () => {
+    nav.classList.remove('abierto');
+    boton.setAttribute('aria-expanded', 'false');
+  }));
+
+  // Scrollspy: marca el enlace de la sección visible más alta.
+  const secciones = enlaces
+    .map((a) => document.querySelector(a.getAttribute('href')))
+    .filter(Boolean);
+  const visibles = new Set();
+
+  const observador = new IntersectionObserver((entradas) => {
+    entradas.forEach((e) => e.isIntersecting ? visibles.add(e.target) : visibles.delete(e.target));
+    const activa = secciones.find((s) => visibles.has(s));
+    enlaces.forEach((a) => {
+      const esActiva = activa && a.getAttribute('href') === `#${activa.id}`;
+      if (esActiva) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }, { rootMargin: '-10% 0px -70% 0px' });
+
+  secciones.forEach((s) => observador.observe(s));
+})();
+
+/* ---------- Tema de las librerías ---------- */
+(function temaLibrerias() {
+  const css = getComputedStyle(document.documentElement);
+  const variable = (nombre) => css.getPropertyValue(nombre).trim();
+  const oscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  if (window.Chart) {
+    Chart.defaults.color = variable('--texto-suave');
+    Chart.defaults.borderColor = variable('--borde');
+    Chart.defaults.font.family = variable('--fuente');
+    Chart.defaults.maintainAspectRatio = false;
+  }
+  if (window.mermaid) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: oscuro ? 'dark' : 'neutral',
+      fontFamily: variable('--fuente'),
+    });
+  }
+})();
+
+/* ---------- Pie: procedencia ---------- */
+cargarDatos('meta')
+  .then((meta) => {
+    const commit = meta.git_commit ? ` · commit <code>${meta.git_commit}</code>` : '';
+    document.getElementById('pie').innerHTML =
+      `Datos generados el ${meta.generado_en.slice(0, 10)} desde ` +
+      `<code>${meta.archivo_fuente}</code>${commit}. ` +
+      `${meta.conteos.partidos_validos} partidos válidos · ` +
+      `${meta.conteos.hallazgos} hallazgos de calidad de datos.`;
+  })
+  .catch(() => {
+    document.getElementById('pie').textContent =
+      'No se pudo leer la procedencia de los datos.';
+  });
+</script>
+
+<!-- ============ Un script por sección: solo carga de datos ============ -->
+
+<script>
+registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, goleo, disciplina) =>
+  `Tabla oficial con ${tablas.oficial.length} equipos, ${goleo.correcto.length} goleadores y ` +
+  `${disciplina.summary.casos_alineacion_indebida} casos de alineación indebida.`);
+</script>
+
+<script>
+registrarSeccion('posiciones', ['standings', 'j11', 'matches'], (tablas, j11, partidos) =>
+  `${Object.keys(tablas).length} escenarios de tabla, ${j11.clasificados.length} equipos ya ` +
+  `clasificados y ${partidos.validos.length} partidos jugados.`);
+</script>
+
+<script>
+registrarSeccion('goleo', ['scorers'], (goleo) =>
+  `${goleo.correcto.length} goleadores, ${goleo.publicado.length} filas publicadas y ` +
+  `${goleo.comparacion.filter((f) => f.tipo !== 'coincide').length} diferencias por explicar.`);
+</script>
+
+<script>
+registrarSeccion('estadisticas', ['stats'], (est) =>
+  `${est.general.goles} goles en ${est.general.partidos} partidos y ` +
+  `${est.referees.length} árbitros con su prueba de significancia.`);
+</script>
+
+<script>
+registrarSeccion('disciplina', ['discipline'], (disciplina) =>
+  `${disciplina.triggers.length} eventos que generan suspensión y ` +
+  `${disciplina.timeline.length} filas de línea de tiempo.`);
+</script>
+
+<script>
+registrarSeccion('calidad', ['findings_log'], (hallazgos) =>
+  `${hallazgos.length} hallazgos de ` +
+  `${new Set(hallazgos.map((h) => h.rule_id)).size} reglas distintas.`);
+</script>
+
+<script>
+registrarSeccion('proceso', ['parte2'], (texto) =>
+  `Contenido de la Parte 2 cargado (${texto.length} caracteres de markdown).`);
+</script>
+
+<script>
+registrarSeccion('mejoras', ['parte2'], (texto) =>
+  `Tabla de mejoras dentro del mismo markdown (${texto.length} caracteres), ` +
+  `servida desde la caché sin una segunda petición.`);
+</script>
+
+<script>
+registrarSeccion('metodologia', ['meta'], (meta) =>
+  `${Object.keys(meta.supuestos).length} supuestos declarados y ` +
+  `${meta.conteos.jugadores} jugadores en el registro.`);
+</script>
+
+</body>
+</html>

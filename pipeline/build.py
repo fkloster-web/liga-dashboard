@@ -32,6 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EXCEL = REPO_ROOT / "data" / "raw" / "Datos_prueba_liga.xlsx"
 DEFAULT_ASSUMPTIONS = REPO_ROOT / "config" / "assumptions.yaml"
 DEFAULT_OUT_DIR = REPO_ROOT / "site" / "data"
+PARTE2_SRC = REPO_ROOT / "config" / "parte2.md"
 
 
 @dataclass
@@ -256,6 +257,19 @@ def write_outputs(result: PipelineResult, out_dir: str | Path = DEFAULT_OUT_DIR)
             encoding="utf-8",
         )
         escritos.append(destino)
+
+    # El sitio se publica con site/ como raíz, así que config/parte2.md no sería
+    # alcanzable desde la página. Se copia verbatim junto a los JSON. Falla de
+    # forma ruidosa si no existe: sin él, dos secciones del sitio quedan vacías.
+    if not PARTE2_SRC.exists():
+        raise FileNotFoundError(
+            f"No se encontró {PARTE2_SRC}: el sitio lo necesita para las secciones "
+            f"de proceso y mejoras priorizadas."
+        )
+    destino_parte2 = out_dir / PARTE2_SRC.name
+    destino_parte2.write_text(PARTE2_SRC.read_text(encoding="utf-8"), encoding="utf-8")
+    escritos.append(destino_parte2)
+
     return escritos
 
 

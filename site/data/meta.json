@@ -1,8 +1,8 @@
 {
-  "generado_en": "2026-09-24T21:42:03-06:00",
+  "generado_en": "2026-09-24T23:02:57-06:00",
   "fuente": "excel",
   "archivo_fuente": "Datos_prueba_liga.xlsx",
-  "git_commit": "99b4b7a",
+  "git_commit": "fef1b41",
   "supuestos": {
     "cutoff_date": "2026-09-01",
     "registration_close": "2026-08-08",
