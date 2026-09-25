@@ -307,6 +307,18 @@ table.datos td.num { text-align: left; vertical-align: top; font-weight: 700; }
 ul.restricciones { max-width: 70ch; padding-left: 1.2rem; }
 ul.restricciones li { margin-bottom: .35rem; }
 
+/* ---------- Resumen ejecutivo: tarjetas de KPI ---------- */
+.kpi-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+.tarjeta-kpi { background: var(--bg-sutil); border-radius: 10px; padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .35rem; }
+.tarjeta-kpi .etiqueta-escenario { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--acento); font-weight: 600; }
+.tarjeta-kpi .kpi-detalle { font-size: .85rem; color: var(--texto-suave); }
+.tarjeta-kpi .kpi-detalle.chico { font-size: .78rem; }
+.tarjeta-kpi .enlace-tarjeta { margin-top: auto; padding-top: .6rem; color: var(--acento); font-weight: 600; font-size: .88rem; text-decoration: none; }
+.tarjeta-kpi .enlace-tarjeta:hover, .enlaces-rapidos a:hover { text-decoration: underline; }
+.historia { max-width: 90ch; }
+.enlaces-rapidos { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin-top: 1rem; }
+.enlaces-rapidos a { color: var(--acento); font-weight: 600; font-size: .9rem; text-decoration: none; }
+
 /* ---------- Metodología ---------- */
 table.datos code { font-family: var(--fuente-mono); font-size: .85em; }
 table.datos td.valor { text-align: left; white-space: normal; }
@@ -489,6 +501,21 @@ footer {
     <h2 id="resumen-titulo">1. Resumen ejecutivo</h2>
     <p class="descripcion">Los hallazgos principales y su impacto sobre la liguilla.</p>
     <div class="placeholder" data-seccion="resumen">Cargando datos…</div>
+    <div id="resumen-contenido" hidden>
+
+      <div class="selector-escenario" id="selector-escenario-resumen" role="group" aria-label="Escenario de la tabla para la primera tarjeta">
+        <button type="button" data-escenario="oficial" aria-pressed="true">Oficial</button>
+        <button type="button" data-escenario="en_cancha" aria-pressed="false">En cancha</button>
+        <button type="button" data-escenario="sin_doble_amarilla" aria-pressed="false">Sin doble amarilla</button>
+      </div>
+      <p class="nota-escenario" id="nota-escenario-resumen"></p>
+
+      <div class="kpi-tarjetas" id="resumen-tarjetas"></div>
+
+      <p class="historia" id="resumen-historia"></p>
+      <nav class="enlaces-rapidos" id="resumen-enlaces" aria-label="Ir a una sección"></nav>
+
+    </div>
   </section>
 
   <section id="posiciones" aria-labelledby="posiciones-titulo">
@@ -927,6 +954,23 @@ const REGLAS_LIMPIEZA = {
   GOLEO_PUBLICADO: { nombre: 'Errores del goleo publicado', detalle: 'Documenta cada diferencia entre el goleo publicado y el correcto.' },
 };
 
+// Escenarios de la tabla de posiciones. Los usan la sección 2 y el selector del
+// resumen (sección 1), que es el mismo componente con su propio estado.
+const ESCENARIOS_TABLA = {
+  oficial: {
+    etiqueta: 'Oficial',
+    descripcion: 'Aplica el art. 32 (alineación indebida) a los 14 partidos donde corresponde. Es el resultado que rige la liguilla.',
+  },
+  en_cancha: {
+    etiqueta: 'En cancha',
+    descripcion: 'Marcador tal como terminó en el campo, sin aplicar el art. 32. Sirve para ver el impacto de la sanción.',
+  },
+  sin_doble_amarilla: {
+    etiqueta: 'Sin doble amarilla',
+    descripcion: 'El art. 32 se aplica solo donde la infracción no depende de la doble amarilla (6 de los 14 casos). Muestra qué tan decisiva es esa regla.',
+  },
+};
+
 // Inspeccionable desde la consola del navegador.
 const DATOS = {};
 window.DATOS = DATOS;
@@ -1059,27 +1103,195 @@ cargarDatos('meta')
 <!-- ============ Un script por sección: solo carga de datos ============ -->
 
 <script>
-registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, goleo, disciplina) =>
-  `Tabla oficial con ${tablas.oficial.length} equipos, ${goleo.correcto.length} goleadores y ` +
-  `${disciplina.summary.casos_alineacion_indebida} casos de alineación indebida.`);
+(function seccionResumen() {
+  const COLUMNAS = [['PJ', 'pj'], ['G', 'g'], ['E', 'e'], ['P', 'p'], ['GF', 'gf'], ['GC', 'gc'], ['DG', 'dg'], ['Pts', 'pts']];
+  const ENLACES = [
+    ['#posiciones', 'Tabla de posiciones'], ['#goleo', 'Goleo'], ['#disciplina', 'Disciplina'],
+    ['#calidad', 'Calidad de datos'], ['#proceso', 'Proceso actual vs propuesto'], ['#mejoras', 'Mejoras'],
+  ];
+
+  const lista = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}` : xs.join(''));
+  const enMinuscula = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+
+  // Compara la tabla publicada con la del escenario elegido. "Equipo con error" =
+  // alguna de sus cifras (PJ, G, E, P, GF, GC, DG, Pts) difiere de la publicada.
+  function compararTabla(standings, escenario) {
+    const pub = Object.fromEntries(standings.publicada.map((f) => [f.Equipo, f]));
+    const filas = standings[escenario];
+    const distintos = filas.filter((f) => COLUMNAS.some(([a, b]) => pub[f.equipo][a] !== f[b]));
+    const top8 = (xs, pos, eq) => new Set(xs.filter((f) => f[pos] <= 8).map((f) => f[eq]));
+    const top8Pub = top8(standings.publicada, 'Pos', 'Equipo');
+    const top8Esc = top8(filas, 'posicion', 'equipo');
+    return {
+      distintos: distintos.length,
+      total: filas.length,
+      liderPub: standings.publicada.find((f) => f.Pos === 1).Equipo,
+      liderEsc: filas.find((f) => f.posicion === 1).equipo,
+      entran: [...top8Esc].filter((e) => !top8Pub.has(e)),
+      salen: [...top8Pub].filter((e) => !top8Esc.has(e)),
+    };
+  }
+
+  function el(tag, clase, texto) {
+    const e = document.createElement(tag);
+    if (clase) e.className = clase;
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+  }
+
+  function tarjeta({ valor, etiqueta, detalles = [], enlace, escenario }) {
+    const t = el('article', 'tarjeta-kpi');
+    if (escenario) t.append(el('div', 'etiqueta-escenario', `Escenario: ${escenario}`));
+    t.append(el('div', 'kpi-valor', valor), el('div', 'kpi-etiqueta', etiqueta));
+    detalles.forEach(({ texto, chico }) => t.append(el('div', chico ? 'kpi-detalle chico' : 'kpi-detalle', texto)));
+    const a = el('a', 'enlace-tarjeta', `${enlace[1]} →`);
+    a.href = enlace[0];
+    t.append(a);
+    return t;
+  }
+
+  function tarjetaTabla(standings, escenario) {
+    const c = compararTabla(standings, escenario);
+    const detalles = [
+      {
+        texto: c.liderPub !== c.liderEsc
+          ? `El líder cambia: ${c.liderPub} (publicada) → ${c.liderEsc}.`
+          : `El líder no cambia: ${c.liderEsc}.`,
+      },
+      {
+        texto: c.entran.length || c.salen.length
+          ? `Liguilla: entra${c.entran.length > 1 ? 'n' : ''} ${lista(c.entran) || 'nadie'}; sale${c.salen.length > 1 ? 'n' : ''} ${lista(c.salen) || 'nadie'}.`
+          : 'Liguilla: sin cambios frente a la publicada.',
+      },
+      { texto: 'Cuenta los equipos con PJ, G, E, P, GF, GC, DG o Pts distintos a los publicados.', chico: true },
+    ];
+    return tarjeta({
+      valor: `${c.distintos} de ${c.total}`,
+      etiqueta: 'equipos con cifras distintas a la tabla publicada',
+      detalles, enlace: ['#posiciones', 'Ver tabla completa'],
+      escenario: ESCENARIOS_TABLA[escenario].etiqueta,
+    });
+  }
+
+  function tarjetasFijas(disciplina, goleo) {
+    const s = disciplina.summary;
+    const errores = goleo.comparacion.filter((c) => c.tipo !== 'coincide').length;
+    const pub = goleo.publicado[0], real = goleo.correcto[0];
+    return [
+      tarjeta({
+        valor: `${s.pct_no_cumplidas.toFixed(1)}%`,
+        etiqueta: 'de las suspensiones no se cumplió',
+        detalles: [
+          { texto: `${s.no_cumplidas} de ${s.triggers_total} eventos que generan suspensión.` },
+          { texto: `Rojas directas: ${s.rojas_no_cumplidas} de ${s.rojas_total} incumplidas.` },
+        ],
+        enlace: ['#disciplina', 'Ver la línea de tiempo'],
+      }),
+      tarjeta({
+        valor: s.casos_alineacion_indebida,
+        etiqueta: 'casos de alineación indebida',
+        detalles: [
+          { texto: `En ${s.partidos_afectados} de ${s.partidos_jugados} partidos jugados (${s.pct_partidos_afectados.toFixed(1)}%).` },
+          { texto: 'Cada caso se sanciona de oficio con el art. 32.' },
+        ],
+        enlace: ['#disciplina', 'Ver los partidos'],
+      }),
+      tarjeta({
+        valor: errores,
+        etiqueta: 'errores en el goleo publicado',
+        detalles: [
+          { texto: `La lista publicada coronaba a ${pub.Jugador} (${pub.Equipo}) con ${pub.Goles}.` },
+          { texto: `El goleador correcto es ${real.nombre} (${real.equipo}) con ${real.goles}.` },
+        ],
+        enlace: ['#goleo', 'Ver el goleo'],
+      }),
+    ];
+  }
+
+  // Todo número del párrafo sale de los datos; siempre usa el escenario oficial.
+  function historia(standings, disciplina, hallazgos, mejoras) {
+    const o = compararTabla(standings, 'oficial');
+    const s = disciplina.summary;
+    const reglas = new Set(hallazgos.map((h) => h.rule_id)).size;
+    const partes = [];
+    partes.push(
+      `La tabla publicada difiere de la oficial en ${o.distintos} de ${o.total} equipos: ` +
+      (o.liderPub !== o.liderEsc ? `el líder es ${o.liderEsc}, no ${o.liderPub}` : `el líder no cambia (${o.liderEsc})`) +
+      (o.entran.length || o.salen.length
+        ? `, y ${lista(o.entran)} entra${o.entran.length > 1 ? 'n' : ''} a la liguilla mientras ${lista(o.salen)} sale${o.salen.length > 1 ? 'n' : ''}. `
+        : '. ') +
+      `Además, ${s.no_cumplidas} de ${s.triggers_total} suspensiones no se cumplieron y hubo ` +
+      `${s.casos_alineacion_indebida} casos de alineación indebida.`);
+    partes.push(
+      `Un pipeline reproducible lo corrigió (${reglas} reglas de limpieza, ${hallazgos.length} hallazgos, ` +
+      `pruebas automáticas).`);
+    if (mejoras && mejoras.length) {
+      partes.push(
+        `Se proponen ${mejoras.length} mejoras dentro de las restricciones de la liga; ` +
+        `las primeras: ${enMinuscula(mejoras[0])}` +
+        (mejoras[1] ? ` y ${enMinuscula(mejoras[1])}.` : '.'));
+    }
+    return partes.join(' ');
+  }
+
+  // Nombres de las mejoras: segunda columna de la tabla de parte2.md.
+  function nombresMejoras(md) {
+    return md.replace(/\r/g, '').split('\n')
+      .filter((l) => l.trim().startsWith('|')).slice(2)
+      .map((l) => l.trim().replace(/^\||\|$/g, '').split('|')[1].trim());
+  }
+
+  function render([standings, scorers, disciplina, hallazgos, md]) {
+    const cont = document.getElementById('resumen-tarjetas');
+    const tablaTarjeta = el('div');
+    tablaTarjeta.setAttribute('aria-live', 'polite');
+    tablaTarjeta.style.display = 'contents';
+    cont.append(tablaTarjeta, ...tarjetasFijas(disciplina, scorers));
+
+    function elegir(escenario) {
+      tablaTarjeta.replaceChildren(tarjetaTabla(standings, escenario));
+      document.querySelectorAll('#selector-escenario-resumen button').forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.escenario === escenario)));
+      document.getElementById('nota-escenario-resumen').textContent =
+        `${ESCENARIOS_TABLA[escenario].descripcion} El selector solo cambia la primera tarjeta: ` +
+        'las demás no dependen del escenario.';
+    }
+    document.getElementById('selector-escenario-resumen').addEventListener('click', (ev) => {
+      const b = ev.target.closest('button[data-escenario]');
+      if (b) elegir(b.dataset.escenario);
+    });
+    elegir('oficial');
+
+    let mejoras = null;
+    try { mejoras = nombresMejoras(md); } catch (e) { console.error('[resumen] parte2.md', e); }
+    document.getElementById('resumen-historia').textContent = historia(standings, disciplina, hallazgos, mejoras);
+
+    const nav = document.getElementById('resumen-enlaces');
+    ENLACES.forEach(([href, texto]) => {
+      const a = el('a', '', `${texto} →`);
+      a.href = href;
+      nav.append(a);
+    });
+
+    document.querySelector('[data-seccion="resumen"]').hidden = true;
+    document.getElementById('resumen-contenido').hidden = false;
+  }
+
+  Promise.all([
+    cargarDatos('standings'), cargarDatos('scorers'), cargarDatos('discipline'),
+    cargarDatos('findings_log'), cargarDatos('parte2').catch(() => ''),
+  ]).then(render).catch((error) => {
+    const caja = document.querySelector('[data-seccion="resumen"]');
+    caja.className = 'placeholder error';
+    caja.innerHTML = describirError(error);
+    console.error('[resumen]', error);
+  });
+})();
 </script>
 
 <script>
 (function seccionPosiciones() {
-  const ESCENARIOS = {
-    oficial: {
-      etiqueta: 'Oficial',
-      descripcion: 'Aplica el art. 32 (alineación indebida) a los 14 partidos donde corresponde. Es el resultado que rige la liguilla.',
-    },
-    en_cancha: {
-      etiqueta: 'En cancha',
-      descripcion: 'Marcador tal como terminó en el campo, sin aplicar el art. 32. Sirve para ver el impacto de la sanción.',
-    },
-    sin_doble_amarilla: {
-      etiqueta: 'Sin doble amarilla',
-      descripcion: 'El art. 32 se aplica solo donde la infracción no depende de la doble amarilla (6 de los 14 casos). Muestra qué tan decisiva es esa regla.',
-    },
-  };
+  const ESCENARIOS = ESCENARIOS_TABLA;
 
   const CRITERIO_LABEL = {
     head_to_head_or_minitable: 'Resultado entre empatados / minitabla (art. 18, criterios 1-2)',
