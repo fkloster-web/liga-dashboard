@@ -29,6 +29,7 @@
   /* Ámbar de advertencia para marcas gráficas (anillos del resumen): ≥ 4.5:1
      sobre --bg-sutil. Ningún ámbar único cumple en claro y en oscuro a la vez. */
   --advertencia: #955f00;
+  --sombra-tarjeta: 0 1px 2px rgba(16, 24, 40, .06), 0 4px 12px rgba(16, 24, 40, .06);
 
   /* Paleta categórica de gráficas (dataviz skill, palette.md): primeros 3
      slots del categórico de referencia, los únicos 3 validados "all-pairs"
@@ -56,6 +57,7 @@
     --aviso-bg: #2a2413;
     --aviso-texto: #e0c481;
     --advertencia: #fab219;
+    --sombra-tarjeta: 0 1px 2px rgba(0, 0, 0, .5), 0 4px 14px rgba(0, 0, 0, .35);
 
     --serie-1: #3987e5;
     --serie-2: #d95926;
@@ -454,6 +456,71 @@ details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
   .barra-vistas { padding: 0 .75rem; }
 }
 
+/* ---------- Vista Dashboard ---------- */
+.dash { max-width: 1400px; margin: 0 auto; padding: calc(var(--tabs-alto) + 1.25rem) 1.5rem 2rem; }
+.dash-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-bottom: 1rem; }
+.dash-toolbar .selector-escenario { margin: 0; }
+.dash-etiqueta { font-size: .8rem; color: var(--texto-suave); }
+.dash-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1.25rem; }
+.dash-medidores { display: contents; } /* los 4 medidores participan directamente en la cuadrícula */
+
+.tarjeta-dash,
+.dash .tarjeta-kpi {
+  background: var(--bg-elevado);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  box-shadow: var(--sombra-tarjeta);
+  min-width: 0;
+}
+.tarjeta-dash { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .6rem; }
+.dash-med { grid-column: span 3; }
+.dash-pos { grid-column: span 8; }
+.dash-gol { grid-column: span 4; }
+.dash-est { grid-column: span 6; }
+.dash-cal { grid-column: span 12; }
+
+.dash-cab { display: flex; align-items: center; gap: .55rem; }
+.dash-cab h2 { margin: 0; font-size: .98rem; font-weight: 650; }
+.dash-icono { width: 1.15rem; height: 1.15rem; color: var(--acento); flex: none; }
+.dash-mas { margin-left: auto; color: var(--acento); font-size: .82rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.dash-mas:hover { text-decoration: underline; }
+.dash-sub { margin: 0; font-size: .8rem; color: var(--texto-suave); }
+.dash-nota { margin: 0; font-size: .78rem; color: var(--texto-suave); }
+.dash .selector-escenario { margin: 0; }
+.dash .selector-escenario button { padding: .3rem .75rem; font-size: .82rem; }
+
+/* Tablas compactas con desplazamiento interno y encabezado fijo. */
+.dash-scroll { overflow: auto; max-height: 28rem; }
+.dash table.datos { font-size: .82rem; }
+.dash table.datos th, .dash table.datos td { padding: .35rem .55rem; }
+.dash-scroll thead th { position: sticky; top: 0; background: var(--bg-elevado); z-index: 1; }
+#dash-tabla-calidad .nota-fila { white-space: nowrap; }
+.dash table.datos tbody tr.par { background: var(--bg-sutil); }
+
+/* Gráficas: contenedor con alto propio (Chart.js dimensiona el canvas al contenedor). */
+.dash-grafica { position: relative; height: 230px; }
+.dash-grafica.alta { height: 290px; }
+
+.dash-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; }
+.dash-filtros label { display: flex; flex-direction: column; gap: .2rem; font-size: .75rem; color: var(--texto-suave); }
+.dash-filtros select, .dash-filtros button {
+  font: inherit; font-size: .85rem; color: var(--texto); background: var(--bg-elevado);
+  border: 1px solid var(--borde); border-radius: 6px; padding: .3rem .5rem;
+}
+.dash-filtros button { cursor: pointer; color: var(--acento); font-weight: 600; }
+.dash-filtros select:focus-visible, .dash-filtros button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.dash-pie { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem 2rem; font-size: .8rem; color: var(--texto-suave); }
+
+@media (max-width: 1100px) {
+  .dash-med { grid-column: span 6; }
+  .dash-pos, .dash-gol { grid-column: span 12; }
+}
+@media (max-width: 700px) {
+  .dash { padding-left: .9rem; padding-right: .9rem; }
+  .dash-med, .dash-pos, .dash-gol, .dash-est, .dash-cal { grid-column: span 12; }
+  .dash-pie { padding-left: .9rem; padding-right: .9rem; }
+}
+
 /* ---------- Pie ---------- */
 footer {
   margin-left: var(--nav-ancho);
@@ -525,22 +592,144 @@ footer {
 </head>
 <body>
 
-<a class="salto-contenido" href="#contenido">Saltar al contenido</a>
+<a class="salto-contenido" href="#contenido-dashboard">Saltar al contenido</a>
 
 <header class="barra-vistas">
   <div class="barra-marca">Liga Municipal<span>Apertura 2026</span></div>
   <div class="tabs-vista" id="tabs-vista" role="tablist" aria-label="Vista del sitio">
     <button type="button" class="tab-vista" role="tab" id="tab-dashboard" data-vista="dashboard"
-            aria-controls="vista-dashboard" aria-selected="false" tabindex="-1">Dashboard</button>
+            aria-controls="vista-dashboard" aria-selected="true">Dashboard</button>
     <button type="button" class="tab-vista" role="tab" id="tab-informe" data-vista="informe"
-            aria-controls="vista-informe" aria-selected="true">Informe completo</button>
+            aria-controls="vista-informe" aria-selected="false" tabindex="-1">Informe completo</button>
   </div>
 </header>
 
-<!-- Vista Dashboard: se rellena con su propio script; el Informe queda intacto dentro de #vista-informe. -->
-<div id="vista-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" class="vista-inactiva" inert></div>
+<!-- Vista Dashboard: marcado estático (cabeceras y contenedores); un script propio lo rellena
+     con los mismos datos que el Informe. El Informe queda intacto dentro de #vista-informe. -->
+<div id="vista-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
+<main class="dash" id="contenido-dashboard" tabindex="-1">
 
-<div id="vista-informe" role="tabpanel" aria-labelledby="tab-informe">
+  <div class="dash-toolbar">
+    <span class="dash-etiqueta" id="dash-etiqueta-esc">Escenario de la tabla</span>
+    <div class="selector-escenario" id="dash-selector-arriba" role="group" aria-labelledby="dash-etiqueta-esc">
+      <button type="button" data-escenario="oficial" aria-pressed="true">Oficial</button>
+      <button type="button" data-escenario="en_cancha" aria-pressed="false">En cancha</button>
+      <button type="button" data-escenario="sin_doble_amarilla" aria-pressed="false">Sin doble amarilla</button>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+
+    <div class="dash-medidores" id="dash-medidores"></div>
+
+    <section class="tarjeta-dash dash-pos" id="dash-tarjeta-pos" aria-labelledby="dash-t-pos">
+      <div class="dash-cab">
+        <svg class="dash-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+        <h2 id="dash-t-pos">Tabla de posiciones</h2>
+        <a class="dash-mas" href="#posiciones">Informe →</a>
+      </div>
+      <div class="selector-escenario" id="dash-selector-pos" role="group" aria-label="Escenario de la tabla de posiciones">
+        <button type="button" data-escenario="oficial" aria-pressed="true">Oficial</button>
+        <button type="button" data-escenario="en_cancha" aria-pressed="false">En cancha</button>
+        <button type="button" data-escenario="sin_doble_amarilla" aria-pressed="false">Sin doble amarilla</button>
+      </div>
+      <div class="dash-scroll">
+        <table class="datos" id="dash-tabla-posiciones" aria-label="Tabla de posiciones">
+          <thead>
+            <tr>
+              <th class="izq" scope="col">Pos</th>
+              <th class="izq" scope="col">Equipo</th>
+              <th scope="col">PJ</th><th scope="col">G</th><th scope="col">E</th><th scope="col">P</th>
+              <th scope="col">GF</th><th scope="col">GC</th><th scope="col">DG</th><th scope="col">Pts</th>
+              <th class="izq" scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="dash-pos-cuerpo"></tbody>
+        </table>
+      </div>
+      <p class="dash-nota" id="dash-nota-pos" hidden>El estado (clasificado / en disputa / eliminado) se calculó sobre la tabla oficial.</p>
+    </section>
+
+    <section class="tarjeta-dash dash-gol" id="dash-tarjeta-gol" aria-labelledby="dash-t-gol">
+      <div class="dash-cab">
+        <svg class="dash-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>
+        <h2 id="dash-t-gol">Goleo</h2>
+        <a class="dash-mas" href="#goleo">Informe →</a>
+      </div>
+      <p class="dash-sub" id="dash-sub-gol"></p>
+      <div class="dash-scroll">
+        <table class="datos" id="dash-tabla-goleo" aria-label="Goleo correcto, jugadores con 3 goles o más">
+          <thead>
+            <tr>
+              <th class="izq" scope="col">Pos</th>
+              <th class="izq" scope="col">Jugador</th>
+              <th class="izq" scope="col">Equipo</th>
+              <th scope="col">Goles</th>
+            </tr>
+          </thead>
+          <tbody id="dash-gol-cuerpo"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tarjeta-dash dash-est" id="dash-tarjeta-res" aria-labelledby="dash-t-res">
+      <div class="dash-cab">
+        <svg class="dash-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>
+        <h2 id="dash-t-res">Reparto de resultados</h2>
+        <a class="dash-mas" href="#estadisticas">Informe →</a>
+      </div>
+      <p class="dash-sub" id="dash-sub-res"></p>
+      <div class="dash-grafica"><canvas id="dash-grafica-resultados" role="img" aria-label="Reparto de resultados por partido: local, empate y visitante"></canvas></div>
+    </section>
+
+    <section class="tarjeta-dash dash-est" id="dash-tarjeta-arb" aria-labelledby="dash-t-arb">
+      <div class="dash-cab">
+        <svg class="dash-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/></svg>
+        <h2 id="dash-t-arb">Tarjetas por árbitro</h2>
+        <a class="dash-mas" href="#estadisticas">Informe →</a>
+      </div>
+      <p class="dash-sub" id="dash-sub-arb"></p>
+      <div class="dash-grafica"><canvas id="dash-grafica-arbitros" role="img" aria-label="Tarjetas por partido de cada árbitro, con intervalo de confianza del 95%"></canvas></div>
+    </section>
+
+    <section class="tarjeta-dash dash-cal" id="dash-tarjeta-cal" aria-labelledby="dash-t-cal">
+      <div class="dash-cab">
+        <svg class="dash-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 8v6l-4-2v-4L4 5z"/></svg>
+        <h2 id="dash-t-cal">Calidad de datos</h2>
+        <a class="dash-mas" href="#calidad">Informe →</a>
+      </div>
+      <div class="dash-filtros">
+        <label>Regla <select id="dash-filtro-regla"><option value="">Todas</option></select></label>
+        <label>Hoja <select id="dash-filtro-hoja"><option value="">Todas</option></select></label>
+        <label>Severidad <select id="dash-filtro-severidad"><option value="">Todas</option></select></label>
+        <button type="button" id="dash-filtro-limpiar">Limpiar filtros</button>
+      </div>
+      <p class="dash-sub" id="dash-cal-conteo" aria-live="polite"></p>
+      <div class="dash-scroll">
+        <table class="datos" id="dash-tabla-calidad" aria-label="Hallazgos de calidad de datos">
+          <thead>
+            <tr>
+              <th class="izq" scope="col">Regla</th>
+              <th class="izq" scope="col">Severidad</th>
+              <th class="izq" scope="col">Hoja</th>
+              <th class="izq" scope="col">Registro afectado</th>
+              <th class="izq" scope="col">Valor original</th>
+              <th class="izq" scope="col">Valor corregido</th>
+              <th class="izq" scope="col">Acción</th>
+              <th class="izq" scope="col">Nota</th>
+            </tr>
+          </thead>
+          <tbody id="dash-cal-cuerpo"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</main>
+<p class="dash-pie" id="dash-pie"></p>
+</div>
+
+<div id="vista-informe" role="tabpanel" aria-labelledby="tab-informe" class="vista-inactiva" inert>
 
 <nav class="nav" id="nav" aria-label="Secciones del informe">
   <div class="nav-encabezado">
@@ -1237,7 +1426,9 @@ cargarDatos('meta')
     if (cambio) mostrar(vista);
     if (!cambio && !desdeCarga) return;
     const destino = idsInforme.has(idDeHash()) ? document.getElementById(idDeHash()) : null;
-    if (destino) requestAnimationFrame(() => destino.scrollIntoView());
+    // Síncrono: cambiar la clase del panel ya fuerza el layout, no hace falta esperar un frame
+    // (y un requestAnimationFrame no corre en una pestaña en segundo plano).
+    if (destino) destino.scrollIntoView();
     else window.scrollTo({ top: desdeCarga ? 0 : scrollGuardado[vista], behavior: 'instant' });
   }
 
@@ -1313,7 +1504,9 @@ const Comp = (function () {
   // Una tarjeta = un medidor circular (doughnut de vuelta completa) con el número
   // al centro, la etiqueta debajo, un texto de contexto y el enlace. Las cuatro
   // usan este mismo componente: mismo tamaño, grosor de anillo y tipografía.
-  function medidor({ severidad, etiqueta, enlace }) {
+  // `compacto` (Dashboard): el contexto se reduce a una línea (`corto`). `superficie`
+  // es el token del fondo de la tarjeta donde vive, para el hueco entre anillo y pista.
+  function medidor({ severidad, etiqueta, enlace, compacto = false, superficie = '--bg-sutil' }) {
     const sev = SEVERIDAD[severidad];
     const color = cssVar(sev.token);
     const t = el('article', 'tarjeta-kpi');
@@ -1348,7 +1541,7 @@ const Comp = (function () {
         datasets: [{
           data: [0, 1],
           backgroundColor: [color, conAlfa(color, 0.2)],
-          borderColor: cssVar('--bg-sutil'), // 2px de superficie entre relleno y pista
+          borderColor: cssVar(superficie), // 2px de superficie entre relleno y pista
           borderWidth: 2,
           borderRadius: 4,
         }],
@@ -1370,7 +1563,7 @@ const Comp = (function () {
 
     return {
       el: t,
-      actualizar({ lleno, total, numero, sub: subtexto, textos: tx, detalles, aria }) {
+      actualizar({ lleno, total, numero, sub: subtexto, textos: tx, detalles, aria, corto }) {
         textos = tx;
         grafica.data.datasets[0].data = [lleno, Math.max(total - lleno, 0)];
         grafica.options.animation = primera || sinMovimiento ? false : { duration: 500 };
@@ -1379,22 +1572,25 @@ const Comp = (function () {
         num.textContent = numero;
         sub.textContent = subtexto;
         canvas.setAttribute('aria-label', aria);
-        detalle.replaceChildren(...detalles.map((d) => el('div', 'kpi-detalle', d)));
+        const lineas = compacto && corto ? [corto] : detalles;
+        detalle.replaceChildren(...lineas.map((d) => el('div', 'kpi-detalle', d)));
       },
     };
   }
 
   function datosTabla(standings, escenario) {
     const c = compararTabla(standings, escenario);
+    const lider = c.liderPub !== c.liderEsc
+      ? `El líder cambia: ${c.liderPub} (publicada) → ${c.liderEsc}.`
+      : `El líder no cambia: ${c.liderEsc}.`;
     return {
+      corto: lider,
       lleno: c.distintos, total: c.total, numero: c.distintos, sub: `de ${c.total} equipos`,
       textos: [`${c.distintos} equipos con cifras distintas a las publicadas`, `${c.total - c.distintos} sin diferencias`],
       aria: `${c.distintos} de ${c.total} equipos con cifras distintas a la tabla publicada, escenario ${ESCENARIOS_TABLA[escenario].etiqueta}`,
       detalles: [
         `Escenario: ${ESCENARIOS_TABLA[escenario].etiqueta}.`,
-        c.liderPub !== c.liderEsc
-          ? `El líder cambia: ${c.liderPub} (publicada) → ${c.liderEsc}.`
-          : `El líder no cambia: ${c.liderEsc}.`,
+        lider,
         c.entran.length || c.salen.length
           ? `Liguilla: entra${c.entran.length > 1 ? 'n' : ''} ${lista(c.entran) || 'nadie'}; sale${c.salen.length > 1 ? 'n' : ''} ${lista(c.salen) || 'nadie'}.`
           : 'Liguilla: sin cambios frente a la publicada.',
@@ -1402,16 +1598,17 @@ const Comp = (function () {
     };
   }
 
-  function medidoresFijos(disciplina, goleo) {
+  function medidoresFijos(disciplina, goleo, opciones = {}) {
     const s = disciplina.summary;
     const errores = goleo.comparacion.filter((c) => c.tipo !== 'coincide').length;
     const filasPub = goleo.publicado.length;
     const pub = goleo.publicado[0], real = goleo.correcto[0];
 
     const incumplidas = medidor({
-      severidad: 'critico', etiqueta: 'Suspensiones incumplidas', enlace: ['#disciplina', 'Ver la línea de tiempo'],
+      severidad: 'critico', etiqueta: 'Suspensiones incumplidas', enlace: ['#disciplina', 'Ver la línea de tiempo'], ...opciones,
     });
     incumplidas.actualizar({
+      corto: `Rojas directas: ${s.rojas_no_cumplidas} de ${s.rojas_total} incumplidas.`,
       lleno: s.pct_no_cumplidas, total: 100, numero: `${s.pct_no_cumplidas.toFixed(1)}%`,
       sub: `${s.no_cumplidas} de ${s.triggers_total}`,
       textos: [`${s.no_cumplidas} de ${s.triggers_total} suspensiones incumplidas`, `${s.cumplidas_a_tiempo} cumplidas a tiempo`],
@@ -1423,11 +1620,12 @@ const Comp = (function () {
     });
 
     const alineacion = medidor({
-      severidad: 'advertencia', etiqueta: 'Alineación indebida', enlace: ['#disciplina', 'Ver los partidos'],
+      severidad: 'advertencia', etiqueta: 'Alineación indebida', enlace: ['#disciplina', 'Ver los partidos'], ...opciones,
     });
     // Se mide en partidos afectados (no casos/partidos, que podría pasar de 100%):
     // el anillo, el número y el texto usan la misma cifra.
     alineacion.actualizar({
+      corto: `${s.casos_alineacion_indebida} casos en ${s.partidos_afectados} partidos.`,
       lleno: s.partidos_afectados, total: s.partidos_jugados,
       numero: s.partidos_afectados, sub: `de ${s.partidos_jugados} partidos`,
       textos: [`${s.partidos_afectados} partidos con alineación indebida`, `${s.partidos_jugados - s.partidos_afectados} partidos sin casos`],
@@ -1439,9 +1637,10 @@ const Comp = (function () {
     });
 
     const goleoM = medidor({
-      severidad: 'info', etiqueta: 'Errores en el goleo', enlace: ['#goleo', 'Ver el goleo'],
+      severidad: 'info', etiqueta: 'Errores en el goleo', enlace: ['#goleo', 'Ver el goleo'], ...opciones,
     });
     goleoM.actualizar({
+      corto: `Goleador correcto: ${real.nombre} (${real.goles}).`,
       lleno: errores, total: filasPub, numero: errores, sub: `de ${filasPub} filas`,
       textos: [`${errores} filas con error`, `${filasPub - errores} filas sin error`],
       aria: `${errores} errores en las ${filasPub} filas del goleo publicado`,
@@ -2865,6 +3064,295 @@ const Comp = (function () {
       caja.innerHTML = describirError(error);
       console.error('[metodologia]', error);
     });
+})();
+</script>
+
+<script>
+/* Vista Dashboard. Usa los mismos datos que el Informe: cada tarjeta pide su archivo
+   con cargarDatos(), que devuelve la promesa ya cacheada (una sola petición por
+   archivo, la haga quien la haga primero). Reutiliza Comp (medidores y su cálculo).
+   Duplicado a propósito, para no tocar secciones ya verificadas: estadoLiguilla,
+   los mapas de acción/severidad de Calidad y la configuración de las dos gráficas
+   (solo presentación; ningún número se recalcula: vienen de stats.json). */
+(function dashboard() {
+  const { el, medidor, medidoresFijos, datosTabla } = Comp;
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  // ---------- Errores aislados por tarjeta ----------
+  function fallo(contenedor, error, nombre) {
+    const caja = el('div', 'placeholder error');
+    caja.innerHTML = describirError(error);
+    if (contenedor.classList.contains('tarjeta-dash')) {
+      contenedor.querySelectorAll(':scope > :not(.dash-cab)').forEach((n) => n.remove());
+    } else {
+      caja.style.gridColumn = '1 / -1';
+    }
+    contenedor.append(caja);
+    console.error(`[dashboard] ${nombre}`, error);
+  }
+  const tarjeta = (id) => document.getElementById(id);
+
+  // ---------- Escenario compartido entre el selector de arriba y el de la tabla ----------
+  let escenario = 'oficial';
+  const alCambiarEscenario = [];
+  function elegir(nuevo) {
+    escenario = nuevo;
+    document.querySelectorAll('#dash-selector-arriba button, #dash-selector-pos button').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.escenario === nuevo)));
+    alCambiarEscenario.forEach((f) => f(nuevo));
+  }
+  ['dash-selector-arriba', 'dash-selector-pos'].forEach((id) =>
+    document.getElementById(id).addEventListener('click', (ev) => {
+      const b = ev.target.closest('button[data-escenario]');
+      if (b) elegir(b.dataset.escenario);
+    }));
+
+  // ---------- 1. Medidores ----------
+  function medidores(standings, disciplina, scorers) {
+    const opciones = { compacto: true, superficie: '--bg-elevado' };
+    const tabla = medidor({
+      severidad: 'advertencia', etiqueta: 'Equipos con error', enlace: ['#posiciones', 'Ver tabla completa'], ...opciones,
+    });
+    tabla.el.setAttribute('aria-live', 'polite');
+    const tarjetas = [tabla, ...medidoresFijos(disciplina, scorers, opciones)].map((m) => m.el);
+    tarjetas.forEach((t) => t.classList.add('dash-med'));
+    document.getElementById('dash-medidores').append(...tarjetas);
+    alCambiarEscenario.push((e) => tabla.actualizar(datosTabla(standings, e)));
+    tabla.actualizar(datosTabla(standings, escenario));
+  }
+
+  // ---------- 2. Posiciones (compacta: sin hallazgo, comparación ni notas) ----------
+  function estadoLiguilla(equipo, j11) {
+    if (j11.clasificados.includes(equipo)) return { clase: 'estado-clasificado', glifo: '✓', texto: 'Clasificado' };
+    if (j11.eliminados.includes(equipo)) return { clase: 'estado-eliminado', glifo: '✕', texto: 'Eliminado' };
+    return { clase: 'estado-disputa', glifo: '◦', texto: 'En disputa' };
+  }
+
+  function posiciones(standings, j11) {
+    const cuerpo = document.getElementById('dash-pos-cuerpo');
+    const CAMPOS = ['pj', 'g', 'e', 'p', 'gf', 'gc', 'dg', 'pts'];
+    function pintar(esc) {
+      cuerpo.replaceChildren();
+      standings[esc].forEach((f, i) => {
+        if (i === 8) {
+          const sep = el('tr', 'corte-liguilla');
+          const td = el('td', '', 'Corte de liguilla · pasan los primeros 8');
+          td.colSpan = 11;
+          sep.append(td);
+          cuerpo.append(sep);
+        }
+        const tr = el('tr', i % 2 === 1 ? 'par' : '');
+        const th = el('th', 'izq equipo', f.equipo);
+        th.scope = 'row';
+        const e = estadoLiguilla(f.equipo, j11);
+        const estado = el('span', `estado ${e.clase}`);
+        estado.append(el('span', 'glifo', e.glifo), document.createTextNode(` ${e.texto}`));
+        const tdEstado = el('td', 'izq');
+        tdEstado.append(estado);
+        tr.append(el('td', '', f.posicion), th, ...CAMPOS.map((c) => el('td', '', f[c])), tdEstado);
+        cuerpo.append(tr);
+      });
+      document.getElementById('dash-nota-pos').hidden = (esc === 'oficial');
+    }
+    alCambiarEscenario.push(pintar);
+    pintar(escenario);
+  }
+
+  // ---------- 3. Goleo (solo la tabla de >= 3 goles) ----------
+  function goleo(scorers) {
+    const UMBRAL = 3;
+    const top = scorers.correcto.filter((f) => f.goles >= UMBRAL);
+    document.getElementById('dash-sub-gol').textContent = `${top.length} jugadores con ${UMBRAL} goles o más`;
+    const cuerpo = document.getElementById('dash-gol-cuerpo');
+    top.forEach((f, i) => {
+      const tr = el('tr', i % 2 === 1 ? 'par' : '');
+      const th = el('th', 'izq equipo', f.nombre);
+      th.scope = 'row';
+      tr.append(el('td', 'izq', f.posicion), th, el('td', 'izq', f.equipo), el('td', '', f.goles));
+      cuerpo.append(tr);
+    });
+  }
+
+  // ---------- 4. Gráficas de Estadísticas (sin el párrafo de significancia) ----------
+  function graficas(stats) {
+    const g = stats.general;
+    document.getElementById('dash-sub-res').textContent =
+      `${g.goles} goles en ${g.partidos} partidos · ${g.goles_por_partido.toFixed(2)} por partido`;
+    document.getElementById('dash-sub-arb').textContent =
+      `${stats.cards.total_crudas} tarjetas · ${stats.cards.por_partido_crudas.toFixed(2)} por partido, con IC 95%`;
+
+    const resultados = [
+      { etiqueta: 'Local', ...g.resultados.local },
+      { etiqueta: 'Empate', ...g.resultados.empate },
+      { etiqueta: 'Visitante', ...g.resultados.visitante },
+    ];
+    new Chart(document.getElementById('dash-grafica-resultados'), {
+      type: 'bar',
+      data: {
+        labels: resultados.map((r) => r.etiqueta),
+        datasets: [{
+          data: resultados.map((r) => r.partidos),
+          backgroundColor: [cssVar('--serie-1'), cssVar('--serie-2'), cssVar('--serie-3')],
+          borderRadius: 4,
+          barPercentage: 0.6,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        layout: { padding: { right: 70 } },
+        scales: {
+          x: { beginAtZero: true, max: g.partidos, grid: { color: cssVar('--borde') } },
+          y: { grid: { display: false } },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => `${c.raw} partidos (${resultados[c.dataIndex].pct.toFixed(1)}%)` } },
+          // Plugin registrado globalmente por la sección 4; solo se le pasan las opciones.
+          etiquetaDirecta: { texto: (i) => `${resultados[i].partidos} partidos · ${resultados[i].pct.toFixed(1)}%` },
+        },
+      },
+    });
+
+    const refs = stats.referees;
+    const EPS = 0.035;
+    new Chart(document.getElementById('dash-grafica-arbitros'), {
+      type: 'bar',
+      data: {
+        labels: refs.map((r) => r.arbitro),
+        datasets: [
+          {
+            label: 'Intervalo de confianza 95%',
+            data: refs.map((r) => [r.ic95_bajo, r.ic95_alto]),
+            backgroundColor: cssVar('--serie-neutral') + '55',
+            borderRadius: 3,
+            barPercentage: 0.5,
+            grouped: false,
+          },
+          {
+            label: 'Promedio',
+            data: refs.map((r) => [r.por_partido - EPS, r.por_partido + EPS]),
+            backgroundColor: cssVar('--serie-1'),
+            barPercentage: 0.5,
+            grouped: false,
+          },
+        ],
+      },
+      options: {
+        indexAxis: 'y',
+        layout: { padding: { right: 60 } },
+        scales: {
+          x: { beginAtZero: true, grid: { color: cssVar('--borde') }, title: { display: true, text: 'Tarjetas por partido' } },
+          y: { grid: { display: false } },
+        },
+        plugins: {
+          legend: { display: true, labels: { filter: (item) => item.text !== 'Promedio' } },
+          tooltip: {
+            callbacks: {
+              title: (items) => refs[items[0].dataIndex].arbitro,
+              label: (c) => {
+                const r = refs[c.dataIndex];
+                return c.datasetIndex === 1
+                  ? `Promedio: ${r.por_partido.toFixed(2)} (${r.partidos} partidos, ${r.tarjetas} tarjetas)`
+                  : `IC 95%: ${r.ic95_bajo.toFixed(2)}–${r.ic95_alto.toFixed(2)}`;
+              },
+            },
+          },
+          etiquetaDirecta: { datasetIndex: 1, texto: (i) => refs[i].por_partido.toFixed(2) },
+        },
+      },
+    });
+  }
+
+  // ---------- 5. Calidad de datos (3 filtros + columna Nota) ----------
+  const ACCION = {
+    corrected: 'Corregido', flagged: 'Marcado', documented_no_action: 'Documentado, sin cambio',
+    deduplicated: 'Duplicado eliminado', excluded: 'Excluido',
+  };
+  const SEV = {
+    critical: { clase: 'sev-critical', glifo: '✕', texto: 'Crítico', orden: 0 },
+    warning: { clase: 'sev-warning', glifo: '▲', texto: 'Advertencia', orden: 1 },
+    info: { clase: 'sev-info', glifo: '◦', texto: 'Info', orden: 2 },
+  };
+  const sev = (id) => SEV[id] || { clase: 'sev-info', glifo: '◦', texto: id, orden: 9 };
+  const nombreRegla = (id) => (REGLAS_LIMPIEZA[id] ? REGLAS_LIMPIEZA[id].nombre : '');
+  const etiquetaRegla = (id) => (nombreRegla(id) ? `${id} · ${nombreRegla(id)}` : id);
+
+  function calidad(hallazgos) {
+    const F = { regla: 'dash-filtro-regla', hoja: 'dash-filtro-hoja', sev: 'dash-filtro-severidad' };
+    const unicos = (campo) => [...new Set(hallazgos.map((h) => h[campo]))];
+    const poblar = (id, valores, etiqueta) =>
+      valores.forEach((v) => document.getElementById(id).append(new Option(etiqueta(v), v)));
+    poblar(F.regla, unicos('rule_id').sort((a, b) => a.localeCompare(b, 'es', { numeric: true })), etiquetaRegla);
+    poblar(F.hoja, unicos('sheet').sort((a, b) => a.localeCompare(b, 'es')), (h) => h);
+    poblar(F.sev, unicos('severity').sort((a, b) => sev(a).orden - sev(b).orden), (v) => sev(v).texto);
+
+    const celda = (texto, clase) => el('td', clase ? `izq ${clase}` : 'izq', texto);
+    const conNota = (td, texto) => { if (texto) td.append(el('span', 'nota-fila', texto)); return td; };
+    const cuerpo = document.getElementById('dash-cal-cuerpo');
+
+    function pintar() {
+      const filtro = {
+        rule_id: document.getElementById(F.regla).value,
+        sheet: document.getElementById(F.hoja).value,
+        severity: document.getElementById(F.sev).value,
+      };
+      const visibles = hallazgos.filter((h) => Object.entries(filtro).every(([k, v]) => !v || h[k] === v));
+      cuerpo.replaceChildren();
+      visibles.forEach((h, i) => {
+        const tr = el('tr', i % 2 === 1 ? 'par' : '');
+        const s = sev(h.severity);
+        const tdSev = el('td', 'izq');
+        const marca = el('span', `estado ${s.clase}`);
+        marca.append(el('span', 'glifo', s.glifo), document.createTextNode(s.texto));
+        tdSev.append(marca);
+        const valor = (v) => (v === null || v === undefined ? celda('—', 'sin-valor') : celda(v));
+        tr.append(
+          conNota(celda(h.rule_id), nombreRegla(h.rule_id)), tdSev, celda(h.sheet),
+          conNota(celda(h.record_id), h.field ? `campo: ${h.field}` : ''),
+          valor(h.original_value), valor(h.corrected_value),
+          celda(ACCION[h.action] || h.action), celda(h.note, 'nota-hallazgo'),
+        );
+        cuerpo.append(tr);
+      });
+      if (!visibles.length) {
+        const td = celda('Ningún hallazgo coincide con los filtros elegidos.', 'sin-valor');
+        td.colSpan = 8;
+        const tr = el('tr', '');
+        tr.append(td);
+        cuerpo.append(tr);
+      }
+      document.getElementById('dash-cal-conteo').textContent = `Mostrando ${visibles.length} de ${hallazgos.length} hallazgos.`;
+    }
+    Object.values(F).forEach((id) => document.getElementById(id).addEventListener('change', pintar));
+    document.getElementById('dash-filtro-limpiar').addEventListener('click', () => {
+      Object.values(F).forEach((id) => { document.getElementById(id).value = ''; });
+      pintar();
+    });
+    pintar();
+  }
+
+  // ---------- Carga: una promesa cacheada por archivo, un catch por tarjeta ----------
+  const datos = Object.fromEntries(
+    ['standings', 'j11', 'scorers', 'discipline', 'stats', 'findings_log', 'meta'].map((n) => [n, cargarDatos(n)]));
+
+  Promise.all([datos.standings, datos.discipline, datos.scorers])
+    .then(([st, di, sc]) => medidores(st, di, sc))
+    .catch((e) => fallo(document.getElementById('dash-medidores'), e, 'medidores'));
+  Promise.all([datos.standings, datos.j11])
+    .then(([st, j11]) => posiciones(st, j11))
+    .catch((e) => fallo(tarjeta('dash-tarjeta-pos'), e, 'posiciones'));
+  datos.scorers.then(goleo).catch((e) => fallo(tarjeta('dash-tarjeta-gol'), e, 'goleo'));
+  datos.stats.then(graficas).catch((e) => {
+    fallo(tarjeta('dash-tarjeta-res'), e, 'estadísticas');
+    fallo(tarjeta('dash-tarjeta-arb'), e, 'estadísticas');
+  });
+  datos.findings_log.then(calidad).catch((e) => fallo(tarjeta('dash-tarjeta-cal'), e, 'calidad'));
+  datos.meta.then((meta) => {
+    document.getElementById('dash-pie').textContent =
+      `Datos generados el ${meta.generado_en.slice(0, 10)} desde ${meta.archivo_fuente}` +
+      (meta.git_commit ? ` · commit ${meta.git_commit}` : '') +
+      `. ${meta.conteos.partidos_validos} partidos válidos · ${meta.conteos.hallazgos} hallazgos de calidad de datos.`;
+  }).catch(() => { document.getElementById('dash-pie').textContent = 'No se pudo leer la procedencia de los datos.'; });
 })();
 </script>
 
