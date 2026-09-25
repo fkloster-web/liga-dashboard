@@ -235,6 +235,26 @@ tr.corte-liguilla td {
 .delta-baja { color: var(--error); }
 .delta-igual { color: var(--texto-suave); }
 
+/* Nota visible bajo el nombre de un jugador/equipo (nunca solo tooltip). */
+.nota-fila {
+  display: block;
+  margin-top: .2rem;
+  font-size: .78rem;
+  font-weight: 400;
+  color: var(--aviso-texto);
+  white-space: normal;
+}
+
+details.detalle-tabla { margin: 1rem 0 1.5rem; }
+details.detalle-tabla summary {
+  cursor: pointer;
+  color: var(--acento);
+  font-size: .9rem;
+  font-weight: 600;
+}
+details.detalle-tabla summary:hover { text-decoration: underline; }
+details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
+
 /* ---------- Pie ---------- */
 footer {
   margin-left: var(--nav-ancho);
@@ -423,6 +443,66 @@ footer {
     <h2 id="goleo-titulo">3. Goleo</h2>
     <p class="descripcion">Goleo correcto frente al publicado, con la explicación de cada diferencia.</p>
     <div class="placeholder" data-seccion="goleo">Cargando datos…</div>
+    <div id="goleo-contenido" hidden>
+
+      <h3>Goleo correcto</h3>
+      <div class="tabla-scroll">
+        <table class="datos" id="tabla-goleo-top">
+          <caption>Jugadores con 3 goles o más, por id_jugador (nunca por nombre: hay homónimos).</caption>
+          <thead>
+            <tr>
+              <th class="izq" scope="col">Pos</th>
+              <th class="izq" scope="col">Jugador</th>
+              <th class="izq" scope="col">Equipo</th>
+              <th scope="col">Goles</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-goleo-top-cuerpo"></tbody>
+        </table>
+      </div>
+
+      <details class="detalle-tabla" id="detalle-otros-goleadores">
+        <summary></summary>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-goleo-resto">
+            <caption>Jugadores con 1 o 2 goles.</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Pos</th>
+                <th class="izq" scope="col">Jugador</th>
+                <th class="izq" scope="col">Equipo</th>
+                <th scope="col">Goles</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-goleo-resto-cuerpo"></tbody>
+          </table>
+        </div>
+      </details>
+
+      <div class="bloque">
+        <h3>Goleo publicado</h3>
+        <p class="descripcion">Tal como lo publicó la liga, con el motivo de cada diferencia frente al goleo correcto.</p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-goleo-publicado">
+            <caption>Goleo_publicado, hoja original del Excel.</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Pos</th>
+                <th class="izq" scope="col">Jugador</th>
+                <th class="izq" scope="col">Equipo</th>
+                <th scope="col">Goles</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-goleo-publicado-cuerpo"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="aviso" id="aviso-autogoles"></div>
+
+      <div class="hallazgo" id="goleo-hallazgo"></div>
+
+    </div>
   </section>
 
   <section id="estadisticas" aria-labelledby="estadisticas-titulo">
@@ -871,9 +951,133 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('goleo', ['scorers'], (goleo) =>
-  `${goleo.correcto.length} goleadores, ${goleo.publicado.length} filas publicadas y ` +
-  `${goleo.comparacion.filter((f) => f.tipo !== 'coincide').length} diferencias por explicar.`);
+(function seccionGoleo() {
+  const UMBRAL_TOP = 3; // goles >= 3: el rango que documenta CLAUDE.md §8
+
+  function capitalizar(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function celda(valor) {
+    const td = document.createElement('td');
+    td.textContent = valor;
+    return td;
+  }
+
+  function filaJugador(pos, nombre, equipo, goles, notaTexto) {
+    const tr = document.createElement('tr');
+    tr.appendChild(celda(pos));
+
+    const thNombre = document.createElement('th');
+    thNombre.setAttribute('scope', 'row');
+    thNombre.className = 'izq equipo';
+    thNombre.textContent = nombre;
+    if (notaTexto) {
+      const nota = document.createElement('span');
+      nota.className = 'nota-fila';
+      nota.textContent = notaTexto;
+      thNombre.appendChild(nota);
+    }
+    tr.appendChild(thNombre);
+
+    const tdEquipo = document.createElement('td');
+    tdEquipo.className = 'izq';
+    tdEquipo.textContent = equipo;
+    tr.appendChild(tdEquipo);
+
+    tr.appendChild(celda(goles));
+    return tr;
+  }
+
+  function llenarTabla(cuerpoId, filas) {
+    const cuerpo = document.getElementById(cuerpoId);
+    cuerpo.innerHTML = '';
+    filas.forEach(({ pos, nombre, equipo, goles, nota }, i) => {
+      const tr = filaJugador(pos, nombre, equipo, goles, nota);
+      if (i % 2 === 1) tr.className = 'par';
+      cuerpo.appendChild(tr);
+    });
+  }
+
+  function render(scorers) {
+    const top = scorers.correcto.filter((f) => f.goles >= UMBRAL_TOP);
+    const resto = scorers.correcto.filter((f) => f.goles < UMBRAL_TOP);
+
+    // Llave estructural (id_jugador) para la tabla correcta; llave por nombre+
+    // equipo para la publicada, que no trae id_jugador. Los omitidos se
+    // identifican por tipo, nunca por posición dentro del arreglo.
+    const porIdJugador = new Map(scorers.comparacion.map((c) => [c.id_jugador, c]));
+    const porClavePublicada = new Map();
+    scorers.comparacion.forEach((c) => {
+      if (c.equipo_publicado !== null) {
+        porClavePublicada.set(`${c.jugador}|${c.equipo_publicado}`, c);
+      }
+    });
+
+    // --- Tabla del goleo correcto (>=3 goles) ---
+    llenarTabla('tabla-goleo-top-cuerpo', top.map((fila) => {
+      const c = porIdJugador.get(fila.id_jugador);
+      let nota = null;
+      if (c && c.tipo === 'discrepancia') {
+        // El motivo del pipeline explica la publicada, no un error de esta fila:
+        // se antepone que ESTA cifra es correcta.
+        nota = `Esta cifra es correcta. La tabla publicada le atribuye ${c.goles_publicado} goles porque ${c.motivo}.`;
+      } else if (c && c.tipo === 'omitido') {
+        nota = `${capitalizar(c.motivo)}.`;
+      }
+      return { pos: fila.posicion, nombre: fila.nombre, equipo: fila.equipo, goles: fila.goles, nota };
+    }));
+
+    // --- Detalle plegado: el resto (1-2 goles), sin notas (ninguno difiere) ---
+    document.querySelector('#detalle-otros-goleadores summary').textContent =
+      `Ver los demás ${resto.length} goleadores (1-2 goles)`;
+    llenarTabla('tabla-goleo-resto-cuerpo', resto.map((fila) => ({
+      pos: fila.posicion, nombre: fila.nombre, equipo: fila.equipo, goles: fila.goles, nota: null,
+    })));
+
+    // --- Tabla del goleo publicado ---
+    llenarTabla('tabla-goleo-publicado-cuerpo', scorers.publicado.map((fila) => {
+      const c = porClavePublicada.get(`${fila.Jugador}|${fila.Equipo}`);
+      let nota = null;
+      if (c && c.tipo === 'discrepancia') {
+        nota = `⚠ ${capitalizar(c.motivo)} — su cifra correcta es ${c.goles_correcto} goles.`;
+      }
+      return { pos: fila.Pos, nombre: fila.Jugador, equipo: fila.Equipo, goles: fila.Goles, nota };
+    }));
+
+    // --- Autogoles y gol sin autor ---
+    const gsa = scorers.goles_sin_autor[0];
+    document.getElementById('aviso-autogoles').textContent =
+      `Los autogoles no cuentan para el goleo individual: se registraron ${scorers.autogoles} ` +
+      `en la temporada. Además, un gol del marcador oficial quedó sin autor legible en la ` +
+      `cédula: en ${gsa.id_partido} (${gsa.equipo}), de ${gsa.goles_oficiales} goles oficiales, ` +
+      `${gsa.goles_con_autor} tienen autor identificado y ${gsa.goles_sin_autor} queda fuera de ` +
+      `esta tabla.`;
+
+    // --- Párrafo del hallazgo ---
+    const lider = scorers.correcto[0];
+    const empatadosSegundo = scorers.correcto.filter((f) => f.posicion === 2);
+    const errores = scorers.comparacion.filter((c) => c.tipo !== 'coincide');
+    const detalleErrores = errores.map((c) => `${c.jugador} (${c.motivo})`).join('; ');
+    document.getElementById('goleo-hallazgo').textContent =
+      `El goleador correcto es ${lider.nombre} (${lider.equipo}), con ${lider.goles} goles. ` +
+      `En segundo lugar hay ${empatadosSegundo.length} jugadores empatados con ` +
+      `${empatadosSegundo[0].goles} goles cada uno. El goleo publicado tiene ${errores.length} ` +
+      `errores frente al correcto: ${detalleErrores}.`;
+
+    document.querySelector('[data-seccion="goleo"]').hidden = true;
+    document.getElementById('goleo-contenido').hidden = false;
+  }
+
+  cargarDatos('scorers')
+    .then(render)
+    .catch((error) => {
+      const caja = document.querySelector('[data-seccion="goleo"]');
+      caja.className = 'placeholder error';
+      caja.innerHTML = describirError(error);
+      console.error('[goleo]', error);
+    });
+})();
 </script>
 
 <script>
