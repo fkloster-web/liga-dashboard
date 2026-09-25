@@ -218,6 +218,9 @@ tr.corte-liguilla td {
 .estado-clasificado { color: var(--correcto); }
 .estado-eliminado { color: var(--error); }
 .estado-disputa { color: var(--texto-suave); }
+.estado-cumplida { color: var(--correcto); }
+.estado-no-cumplida { color: var(--error); }
+.estado-pendiente { color: var(--texto-suave); }
 
 /* ---------- Marcadores de desempate y notas ---------- */
 .marcador-desempate { font-size: .72rem; color: var(--acento); cursor: help; margin-left: .1rem; }
@@ -258,6 +261,13 @@ tr.corte-liguilla td {
   color: var(--aviso-texto);
   white-space: normal;
 }
+
+/* Línea de tiempo de disciplina: la nota bajo el jugador y bajo la notificación
+   no se parte; el ancho sobrante lo absorbe .tabla-scroll. */
+#tabla-linea-tiempo .nota-fila { white-space: nowrap; }
+#tabla-linea-tiempo th, #tabla-linea-tiempo td { padding-left: .45rem; padding-right: .45rem; }
+table.datos td.motivo { white-space: normal; max-width: 60ch; }
+#tabla-linea-tiempo thead th { white-space: normal; vertical-align: bottom; }
 
 details.detalle-tabla { margin: 1rem 0 1.5rem; }
 details.detalle-tabla summary {
@@ -598,6 +608,58 @@ footer {
     <h2 id="disciplina-titulo">5. Disciplina</h2>
     <p class="descripcion">Línea de tiempo por sanción y lista de incumplimientos.</p>
     <div class="placeholder" data-seccion="disciplina">Cargando datos…</div>
+    <div id="disciplina-contenido" hidden>
+
+      <h3>Resumen</h3>
+      <div class="kpis" id="disciplina-kpis"></div>
+
+      <div class="bloque">
+        <h3>Línea de tiempo por sanción</h3>
+        <p class="descripcion">Cada fila es un evento que generó suspensión, ordenado por fecha: del partido donde ocurrió al partido donde debía cumplirse.</p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-linea-tiempo">
+            <caption>Una suspensión se considera cumplida solo si el jugador no aparece en la alineación del partido a cumplir.</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Jugador</th>
+                <th class="izq" scope="col">Motivo</th>
+                <th class="izq" scope="col">Origen</th>
+                <th class="izq" scope="col">Fecha evento</th>
+                <th class="izq" scope="col">A cumplir en</th>
+                <th class="izq" scope="col">Fecha partido</th>
+                <th scope="col">Días entre ambos</th>
+                <th class="izq" scope="col">¿Notificada antes?</th>
+                <th class="izq" scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-linea-tiempo-cuerpo"></tbody>
+          </table>
+        </div>
+        <ul class="notas-pie" id="disciplina-notas"></ul>
+      </div>
+
+      <div class="hallazgo" id="disciplina-hallazgo"></div>
+
+      <div class="bloque">
+        <h3 id="titulo-violaciones"></h3>
+        <p class="descripcion">Partidos en los que un jugador suspendido (o sin registro vigente) fue alineado. El art. 32 se aplica de oficio.</p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-violaciones">
+            <caption>Alineación indebida por partido, con el equipo infractor y el motivo.</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Partido</th>
+                <th class="izq" scope="col">Equipo infractor</th>
+                <th class="izq" scope="col">Jugador</th>
+                <th class="izq" scope="col">Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-violaciones-cuerpo"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
   </section>
 
   <section id="calidad" aria-labelledby="calidad-titulo">
@@ -1347,9 +1409,226 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('disciplina', ['discipline'], (disciplina) =>
-  `${disciplina.triggers.length} eventos que generan suspensión y ` +
-  `${disciplina.timeline.length} filas de línea de tiempo.`);
+(function seccionDisciplina() {
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+
+  const TIPO_LABEL = {
+    red_direct: 'Roja directa',
+    double_yellow: 'Doble amarilla',
+    accumulation: '5 amarillas',
+  };
+
+  const ESTADO = {
+    cumplida: { clase: 'estado-cumplida', glifo: '✓', texto: 'Cumplida' },
+    no_cumplida: { clase: 'estado-no-cumplida', glifo: '✕', texto: 'No cumplida' },
+    pendiente: { clase: 'estado-pendiente', glifo: '◦', texto: 'Pendiente' },
+  };
+
+  // Fechas aaaa-mm-dd → "sáb 11-jul". Se construye en UTC para que la zona
+  // horaria del navegador no corra el día.
+  function fechaUTC(iso) {
+    const [a, m, d] = iso.split('-').map(Number);
+    return new Date(Date.UTC(a, m - 1, d));
+  }
+  function fechaCorta(iso, conDia) {
+    const f = fechaUTC(iso);
+    const base = `${f.getUTCDate()}-${MESES[f.getUTCMonth()]}`;
+    return conDia ? `${DIAS[f.getUTCDay()]} ${base}` : base;
+  }
+  const esEntreSemana = (iso) => { const d = fechaUTC(iso).getUTCDay(); return d >= 1 && d <= 5; };
+
+  function celda(texto, clase) {
+    const td = document.createElement('td');
+    if (clase) td.className = clase;
+    td.textContent = texto;
+    return td;
+  }
+
+  function estadoSpan(e) {
+    const span = document.createElement('span');
+    span.className = `estado ${e.clase}`;
+    const glifo = document.createElement('span');
+    glifo.className = 'glifo';
+    glifo.setAttribute('aria-hidden', 'true');
+    glifo.textContent = e.glifo;
+    span.append(glifo, document.createTextNode(e.texto));
+    return span;
+  }
+
+  function kpi(valor, etiqueta) {
+    const caja = document.createElement('div');
+    const v = document.createElement('div');
+    v.className = 'kpi-valor';
+    v.textContent = valor;
+    const l = document.createElement('div');
+    l.className = 'kpi-etiqueta';
+    l.textContent = etiqueta;
+    caja.append(v, l);
+    return caja;
+  }
+
+  function renderResumen(s) {
+    const cont = document.getElementById('disciplina-kpis');
+    cont.append(
+      kpi(s.triggers_total, `eventos que generan suspensión (${s.triggers_por_tipo.red_direct} rojas, ` +
+        `${s.triggers_por_tipo.double_yellow} dobles amarillas, ${s.triggers_por_tipo.accumulation} acumulación)`),
+      kpi(s.cumplidas_a_tiempo, 'cumplidas a tiempo'),
+      kpi(s.no_cumplidas, 'no cumplidas'),
+      kpi(`${s.pct_no_cumplidas.toFixed(1)}%`, 'de incumplimiento'),
+      kpi(`${s.rojas_no_cumplidas} de ${s.rojas_total}`, `rojas incumplidas (${s.pct_rojas_no_cumplidas.toFixed(0)}%)`),
+    );
+    if (s.pendientes > 0) cont.append(kpi(s.pendientes, 'pendientes'));
+  }
+
+  function celdaNotificacion(fila, corte) {
+    const td = document.createElement('td');
+    td.className = 'izq';
+    if (fila.notificado_antes_del_partido === null) {
+      td.append(estadoSpan({ clase: 'estado-pendiente', glifo: '—', texto: 'Sin registro' }));
+      return td;
+    }
+    const antes = fila.notificado_antes_del_partido;
+    td.append(estadoSpan(antes
+      ? { clase: 'estado-cumplida', glifo: '✓', texto: 'Sí' }
+      : { clase: 'estado-no-cumplida', glifo: '✕', texto: 'No' }));
+    const posterior = fila.fecha_notificacion > corte;
+    const nota = document.createElement('span');
+    nota.className = 'nota-fila';
+    nota.textContent = `Sesión ${fechaCorta(fila.fecha_sesion)} · aviso ${fechaCorta(fila.fecha_notificacion)}` +
+      (posterior ? ' †' : '');
+    td.append(nota);
+    return td;
+  }
+
+  function renderLineaTiempo(timeline, corte) {
+    const cuerpo = document.getElementById('tabla-linea-tiempo-cuerpo');
+    const filas = [...timeline].sort((a, b) =>
+      a.fecha_evento.localeCompare(b.fecha_evento) || a.partido_origen.localeCompare(b.partido_origen));
+
+    filas.forEach((f, i) => {
+      const tr = document.createElement('tr');
+      if (i % 2 === 1) tr.className = 'par';
+
+      const tdJugador = celda(f.jugador, 'izq');
+      const equipo = document.createElement('span');
+      equipo.className = 'nota-fila';
+      equipo.textContent = f.equipo;
+      tdJugador.append(equipo);
+
+      tr.append(
+        tdJugador,
+        celda(TIPO_LABEL[f.trigger_type] || f.trigger_type, 'izq'),
+        celda(f.partido_origen, 'izq'),
+        celda(fechaCorta(f.fecha_evento, true), 'izq'),
+        celda(f.partido_a_cumplir, 'izq'),
+        celda(fechaCorta(f.fecha_partido_a_cumplir, true), 'izq'),
+        celda(f.dias_entre_evento_y_partido),
+        celdaNotificacion(f, corte),
+      );
+      const tdEstado = document.createElement('td');
+      tdEstado.className = 'izq';
+      tdEstado.append(estadoSpan(ESTADO[f.estado]));
+      tr.append(tdEstado);
+      cuerpo.append(tr);
+    });
+
+    const notas = document.getElementById('disciplina-notas');
+    const liSinRegistro = document.createElement('li');
+    liSinRegistro.textContent = '«Sin registro»: la suspensión nunca apareció en la hoja Sanciones, así que no hubo sesión ni notificación.';
+    notas.append(liSinRegistro);
+    if (filas.some((f) => f.fecha_notificacion && f.fecha_notificacion > corte)) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="marca">†</span> Fecha posterior al corte de datos ' +
+        `(${fechaCorta(corte)}, regla R12): el registro se conserva pero queda marcado.`;
+      notas.append(li);
+    }
+  }
+
+  // El hallazgo se calcula sobre la línea de tiempo del pipeline: ninguna cifra
+  // del párrafo está escrita a mano.
+  function renderHallazgo(timeline) {
+    const noCumplidas = timeline.filter((f) => f.estado === 'no_cumplida');
+    const rojas = timeline.filter((f) => f.trigger_type === 'red_direct');
+    const rojasNo = rojas.filter((f) => f.estado === 'no_cumplida');
+    const rojasSi = rojas.filter((f) => f.estado === 'cumplida');
+    const rojasNoNotificadasAntes = rojasNo.filter((f) => f.notificado_antes_del_partido === false);
+    const conPartidoEntreSemana = rojasNo.filter((f) =>
+      esEntreSemana(f.fecha_evento) || esEntreSemana(f.fecha_partido_a_cumplir));
+    const sinRegistro = noCumplidas.filter((f) => !f.en_sanciones);
+    const sinRegistroSabadoASabado = sinRegistro.filter((f) => f.dias_entre_evento_y_partido >= 7);
+    const rango = (filas) => {
+      const d = filas.map((f) => f.dias_entre_evento_y_partido);
+      const min = Math.min(...d), max = Math.max(...d);
+      return min === max ? `${min} días` : `${min} a ${max} días`;
+    };
+
+    const p1 = document.createElement('p');
+    p1.innerHTML = '<strong>Hallazgo.</strong> Las ' + noCumplidas.length + ' suspensiones incumplidas tienen dos causas distintas.';
+
+    const p2 = document.createElement('p');
+    p2.textContent =
+      `Rojas directas (${rojasNo.length} de ${rojas.length} incumplidas). Las ${rojasSi.length} que se cumplieron ` +
+      `tuvieron ${rango(rojasSi)} entre el partido de origen y el siguiente, y la Comisión alcanzó a notificar antes. ` +
+      `Las ${rojasNo.length} incumplidas tuvieron ${rango(rojasNo)}: ${conPartidoEntreSemana.length} de ${rojasNo.length} ` +
+      `involucran un partido entre semana (jornadas del miércoles) y ${rojasNoNotificadasAntes.length} de ${rojasNo.length} ` +
+      `se notificaron después del partido. El proceso es semanal (cédula, sesión de la Comisión, notificación al día ` +
+      `siguiente): cuando hay un partido de por medio, no alcanza a sancionar antes del siguiente juego.`;
+
+    const p3 = document.createElement('p');
+    p3.textContent =
+      `Dobles amarillas y acumulación (${sinRegistro.length} de ${noCumplidas.length} incumplidas). Nunca aparecen en ` +
+      `la hoja de Sanciones: no hubo sesión ni notificación que llegara tarde, simplemente no hay control. ` +
+      `${sinRegistroSabadoASabado.length} de ellas tenían 7 días entre partidos, tiempo suficiente si el proceso ` +
+      `las hubiera registrado: acortar el ciclo de la Comisión no las resolvería.`;
+
+    document.getElementById('disciplina-hallazgo').append(p1, p2, p3);
+  }
+
+  function renderViolaciones(violaciones) {
+    const partidos = new Set(violaciones.map((v) => v.id_partido));
+    document.getElementById('titulo-violaciones').textContent =
+      `${partidos.size} partidos con alineación indebida (${violaciones.length} casos)`;
+
+    const cuerpo = document.getElementById('tabla-violaciones-cuerpo');
+    const ordenadas = [...violaciones].sort((a, b) =>
+      a.jornada - b.jornada || a.id_partido.localeCompare(b.id_partido));
+    let grupo = -1, anterior = null;
+
+    ordenadas.forEach((v) => {
+      // La banda alterna por partido, no por fila: un partido con dos
+      // infractores se lee como un solo bloque.
+      if (v.id_partido !== anterior) { grupo += 1; anterior = v.id_partido; }
+      const tr = document.createElement('tr');
+      if (grupo % 2 === 1) tr.className = 'par';
+      tr.append(
+        celda(`${v.id_partido} · J${v.jornada}`, 'izq'),
+        celda(v.equipo, 'izq'),
+        celda(v.nombre, 'izq'),
+        celda(v.motivo, 'izq motivo'),
+      );
+      cuerpo.append(tr);
+    });
+  }
+
+  function render([disciplina, meta]) {
+    renderResumen(disciplina.summary);
+    renderLineaTiempo(disciplina.timeline, meta.supuestos.cutoff_date);
+    renderHallazgo(disciplina.timeline);
+    renderViolaciones(disciplina.violations);
+    document.querySelector('[data-seccion="disciplina"]').hidden = true;
+    document.getElementById('disciplina-contenido').hidden = false;
+  }
+
+  Promise.all([cargarDatos('discipline'), cargarDatos('meta')])
+    .then(render)
+    .catch((error) => {
+      const caja = document.querySelector('[data-seccion="disciplina"]');
+      caja.className = 'placeholder error';
+      caja.innerHTML = describirError(error);
+      console.error('[disciplina]', error);
+    });
+})();
 </script>
 
 <script>
