@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Optional
 
 import pandas as pd
 
@@ -321,6 +322,7 @@ def r11_check_registration_eligibility(
     player_window = {row.id_jugador: (row.fecha_alta, row.fecha_baja) for row in players.itertuples()}
     registration_close = pd.Timestamp(assumptions["registration_close"])
     is_ineligible = pd.Series(False, index=lineups.index)
+    motivos: dict = {}
     for idx, row in lineups.iterrows():
         id_j = row["id_jugador"]
         if id_j not in player_window:
@@ -345,6 +347,7 @@ def r11_check_registration_eligibility(
                 if eligible_window_but_late_registration
                 else "fuera de ventana [fecha_alta, fecha_baja]"
             )
+            motivos[idx] = motivo
             findings.add(Finding(
                 rule_id="R11", sheet="Alineaciones",
                 record_id=f"{row['id_partido']}:{row['equipo']}#{row['dorsal']}",
@@ -353,6 +356,10 @@ def r11_check_registration_eligibility(
                 note=f"Jugador alineado sin elegibilidad de registro ({motivo}).",
             ))
     lineups["is_ineligible_registration"] = is_ineligible
+    # dtype=object para conservar None (no NaN) en las filas elegibles.
+    lineups["motivo_inelegibilidad"] = pd.Series(
+        [motivos.get(idx) for idx in lineups.index], index=lineups.index, dtype=object
+    )
     return lineups
 
 
@@ -375,8 +382,13 @@ def r12_flag_post_cutoff(
     return sanctions
 
 
-def clean_all(raw: RawData, assumptions: dict) -> CleanedData:
-    findings = FindingsLog()
+def clean_all(
+    raw: RawData, assumptions: dict, findings: Optional[FindingsLog] = None
+) -> CleanedData:
+    """`findings` permite compartir un único log con el resto del pipeline
+    (disciplina, goleo publicado, desempates) para que el sitio muestre un log
+    consolidado. Si no se pasa, se crea uno propio."""
+    findings = findings if findings is not None else FindingsLog()
     canonical_teams = set(raw.teams["equipo"])
 
     matches = r02_parse_dates(raw.matches, findings)

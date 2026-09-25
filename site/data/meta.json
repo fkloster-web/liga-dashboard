@@ -1,0 +1,62 @@
+{
+  "generado_en": "2026-09-24T21:42:03-06:00",
+  "fuente": "excel",
+  "archivo_fuente": "Datos_prueba_liga.xlsx",
+  "git_commit": "99b4b7a",
+  "supuestos": {
+    "cutoff_date": "2026-09-01",
+    "registration_close": "2026-08-08",
+    "double_yellow_is_red": true,
+    "ineligible_if_in_lineup": true,
+    "late_served_suspension_is_valid": false,
+    "suspension_scope": "next_match_only",
+    "art32_sanction": "forfeit_3_0_keep_worse",
+    "art32_goals_count_for_scorers": true,
+    "tiebreakers": [
+      "head_to_head_or_minitable",
+      "goal_diff",
+      "goals_for",
+      "fewer_reds",
+      "draw"
+    ],
+    "reds_for_tiebreak": "direct_reds_only",
+    "yellows_in_red_match_count_for_accumulation": true,
+    "scorers_tie_policy": "shared_rank",
+    "p042_rescheduled": "pending",
+    "stats_use_field_score": true,
+    "tiebreak_cascade_on_unresolved_group": "recursive_narrowing",
+    "art32_keep_worse_threshold_goals": 3,
+    "art32_multi_infractor_same_team_policy": "single_forfeit_not_cumulative",
+    "next_match_filter": {
+      "exclude_status": [
+        "Suspendido"
+      ],
+      "require_date": true
+    },
+    "double_yellow_suspension_anchor": "second_yellow_match",
+    "accumulation_yellows_threshold": 5,
+    "double_yellow_pair_counts_for_accumulation": false,
+    "post_red_own_yellow_treatment": "ignore_for_accumulation_keep_in_log",
+    "cutoff_dates_usage": {
+      "registration_close": "solo R11 (elegibilidad por alta de jugador)",
+      "cutoff_date": "solo R12 (marca de registros posteriores al corte de datos)"
+    },
+    "accumulation_trigger_source": "computed_from_events_running_tally",
+    "sanciones_sheet_role": "compliance_timing_for_red_cards_only",
+    "home_away_bias_disclosure": "report_raw_counts_no_inference",
+    "stats_test_config": {
+      "kruskal_alternative_note": "scipy.stats.kruskal (prueba omnibus, sin parámetro alternative)",
+      "mannwhitney_alternative": "two-sided",
+      "mannwhitney_use_continuity": true,
+      "bonferroni_m": 5
+    }
+  },
+  "conteos": {
+    "partidos_validos": 59,
+    "partidos_excluidos": 1,
+    "jugadores": 218,
+    "eventos": 351,
+    "alineaciones": 1652,
+    "hallazgos": 85
+  }
+}

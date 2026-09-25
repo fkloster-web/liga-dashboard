@@ -1,0 +1,242 @@
+{
+  "general": {
+    "partidos": 59,
+    "goles": 156,
+    "goles_por_partido": 2.6440677966101696,
+    "resultados": {
+      "local": {
+        "partidos": 24,
+        "pct": 40.67796610169492
+      },
+      "empate": {
+        "partidos": 14,
+        "pct": 23.728813559322035
+      },
+      "visitante": {
+        "partidos": 21,
+        "pct": 35.59322033898305
+      }
+    }
+  },
+  "home_away": [
+    {
+      "equipo": "Real Chapalita",
+      "como_local": 10,
+      "como_visitante": 0,
+      "partidos": 10,
+      "desbalance": 10
+    },
+    {
+      "equipo": "Racing Jardines",
+      "como_local": 8,
+      "como_visitante": 1,
+      "partidos": 9,
+      "desbalance": 7
+    },
+    {
+      "equipo": "Unión Zapopan",
+      "como_local": 8,
+      "como_visitante": 2,
+      "partidos": 10,
+      "desbalance": 6
+    },
+    {
+      "equipo": "Juventud Mezquitán",
+      "como_local": 7,
+      "como_visitante": 3,
+      "partidos": 10,
+      "desbalance": 4
+    },
+    {
+      "equipo": "Estrella Providencia",
+      "como_local": 6,
+      "como_visitante": 4,
+      "partidos": 10,
+      "desbalance": 2
+    },
+    {
+      "equipo": "Deportivo Oblatos",
+      "como_local": 5,
+      "como_visitante": 5,
+      "partidos": 10,
+      "desbalance": 0
+    },
+    {
+      "equipo": "Halcones del Country",
+      "como_local": 5,
+      "como_visitante": 5,
+      "partidos": 10,
+      "desbalance": 0
+    },
+    {
+      "equipo": "Tapatíos United",
+      "como_local": 4,
+      "como_visitante": 6,
+      "partidos": 10,
+      "desbalance": -2
+    },
+    {
+      "equipo": "Leones de Tonalá",
+      "como_local": 3,
+      "como_visitante": 7,
+      "partidos": 10,
+      "desbalance": -4
+    },
+    {
+      "equipo": "Sporting Americana",
+      "como_local": 2,
+      "como_visitante": 7,
+      "partidos": 9,
+      "desbalance": -5
+    },
+    {
+      "equipo": "Club Santa Tere",
+      "como_local": 1,
+      "como_visitante": 9,
+      "partidos": 10,
+      "desbalance": -8
+    },
+    {
+      "equipo": "Atlético Tlaquepaque",
+      "como_local": 0,
+      "como_visitante": 10,
+      "partidos": 10,
+      "desbalance": -10
+    }
+  ],
+  "cards": {
+    "amarillas_crudas": 189,
+    "rojas_crudas": 8,
+    "total_crudas": 197,
+    "total_post_r08": 196,
+    "por_partido_crudas": 3.3389830508474576,
+    "por_partido_post_r08": 3.3220338983050848,
+    "expulsiones_doble_amarilla": 10
+  },
+  "referees": [
+    {
+      "arbitro": "A. Núñez",
+      "partidos": 16,
+      "tarjetas": 43,
+      "por_partido": 2.6875,
+      "desv_est": 1.4930394055974097,
+      "ic95_bajo": 1.891915459359141,
+      "ic95_alto": 3.483084540640859
+    },
+    {
+      "arbitro": "B. Salas",
+      "partidos": 9,
+      "tarjetas": 33,
+      "por_partido": 3.6666666666666665,
+      "desv_est": 1.6583123951777,
+      "ic95_bajo": 2.3919749197532996,
+      "ic95_alto": 4.9413584135800335
+    },
+    {
+      "arbitro": "C. Pineda",
+      "partidos": 10,
+      "tarjetas": 29,
+      "por_partido": 2.9,
+      "desv_est": 1.1005049346146119,
+      "ic95_bajo": 2.1127461949686426,
+      "ic95_alto": 3.6872538050313572
+    },
+    {
+      "arbitro": "D. Villa",
+      "partidos": 13,
+      "tarjetas": 55,
+      "por_partido": 4.230769230769231,
+      "desv_est": 1.9215378456610457,
+      "ic95_bajo": 3.0695955319487527,
+      "ic95_alto": 5.3919429295897086
+    },
+    {
+      "arbitro": "E. Ríos",
+      "partidos": 11,
+      "tarjetas": 37,
+      "por_partido": 3.3636363636363638,
+      "desv_est": 1.689540012709215,
+      "ic95_bajo": 2.228587938728646,
+      "ic95_alto": 4.4986847885440815
+    }
+  ],
+  "referees_post_r08": [
+    {
+      "arbitro": "A. Núñez",
+      "partidos": 16,
+      "tarjetas": 43,
+      "por_partido": 2.6875,
+      "desv_est": 1.4930394055974097,
+      "ic95_bajo": 1.891915459359141,
+      "ic95_alto": 3.483084540640859
+    },
+    {
+      "arbitro": "B. Salas",
+      "partidos": 9,
+      "tarjetas": 32,
+      "por_partido": 3.5555555555555554,
+      "desv_est": 1.509230856356236,
+      "ic95_bajo": 2.3954580236438208,
+      "ic95_alto": 4.71565308746729
+    },
+    {
+      "arbitro": "C. Pineda",
+      "partidos": 10,
+      "tarjetas": 29,
+      "por_partido": 2.9,
+      "desv_est": 1.1005049346146119,
+      "ic95_bajo": 2.1127461949686426,
+      "ic95_alto": 3.6872538050313572
+    },
+    {
+      "arbitro": "D. Villa",
+      "partidos": 13,
+      "tarjetas": 55,
+      "por_partido": 4.230769230769231,
+      "desv_est": 1.9215378456610457,
+      "ic95_bajo": 3.0695955319487527,
+      "ic95_alto": 5.3919429295897086
+    },
+    {
+      "arbitro": "E. Ríos",
+      "partidos": 11,
+      "tarjetas": 37,
+      "por_partido": 3.3636363636363638,
+      "desv_est": 1.689540012709215,
+      "ic95_bajo": 2.228587938728646,
+      "ic95_alto": 4.4986847885440815
+    }
+  ],
+  "significance": {
+    "kruskal": {
+      "statistic": 7.200025758571046,
+      "pvalue": 0.1256878563873552,
+      "grupos": 5
+    },
+    "mannwhitney": {
+      "arbitro": "D. Villa",
+      "statistic": 412.5,
+      "pvalue": 0.034972737582706505,
+      "pvalue_bonferroni": 0.17486368791353252,
+      "bonferroni_m": 5
+    },
+    "significativo": false,
+    "interpretacion": "La prueba global de Kruskal-Wallis no detecta diferencias entre los 5 árbitros (p=0.126). La comparación de D. Villa contra el resto da p=0.035 sin corregir, pero al corregir por las 5 comparaciones posibles (Bonferroni) queda en p=0.175. No hay evidencia suficiente para afirmar que algún árbitro sea más estricto: además, las muestras son de 9 a 16 partidos, la asignación de árbitros no fue aleatoria y los datos contienen errores de captura."
+  },
+  "significance_post_r08": {
+    "kruskal": {
+      "statistic": 7.300248995610309,
+      "pvalue": 0.12084693854450568,
+      "grupos": 5
+    },
+    "mannwhitney": {
+      "arbitro": "D. Villa",
+      "statistic": 415.5,
+      "pvalue": 0.030282856773061643,
+      "pvalue_bonferroni": 0.15141428386530822,
+      "bonferroni_m": 5
+    },
+    "significativo": false,
+    "interpretacion": "La prueba global de Kruskal-Wallis no detecta diferencias entre los 5 árbitros (p=0.121). La comparación de D. Villa contra el resto da p=0.030 sin corregir, pero al corregir por las 5 comparaciones posibles (Bonferroni) queda en p=0.151. No hay evidencia suficiente para afirmar que algún árbitro sea más estricto: además, las muestras son de 9 a 16 partidos, la asignación de árbitros no fue aleatoria y los datos contienen errores de captura."
+  }
+}

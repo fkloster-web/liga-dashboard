@@ -17,7 +17,14 @@ art32_sanction: forfeit_3_0_keep_worse  # confirmado
 art32_goals_count_for_scorers: true     # confirmado
 tiebreakers: [head_to_head_or_minitable, goal_diff, goals_for, fewer_reds, draw]  # confirmado
 reds_for_tiebreak: direct_reds_only     # SUPUESTO: solo rojas directas registradas (no se usa en el corte actual)
-yellows_in_red_match_count_for_accumulation: true  # SUPUESTO; no cambia ningún caso actual
+yellows_in_red_match_count_for_accumulation: true
+  # SUPUESTO. Alcance exacto: una amarilla que el jugador vio ANTES de su propia
+  # roja directa, en ese mismo partido, SÍ suma a su acumulación de amarillas.
+  # Razón: fue una amonestación por una jugada independiente, y la roja sanciona
+  # una infracción distinta. Ver el bloque "Reglas de acumulación" más abajo,
+  # donde se explica cómo convive con las otras dos reglas de acumulación.
+  # Verificado: 0 casos en los datos actuales (ningún expulsado con roja directa
+  # tenía amarilla previa en el mismo partido), así que no altera ningún valor.
 scorers_tie_policy: shared_rank         # confirmado
 p042_rescheduled: pending               # confirmado
 stats_use_field_score: true             # SUPUESTO: estadísticas de juego (goles, local/visitante) con marcador en cancha;
@@ -53,6 +60,29 @@ next_match_filter:
 double_yellow_suspension_anchor: second_yellow_match
   # La suspensión por doble amarilla se ancla al partido donde ocurrió la 2a amarilla
   # (mismo tratamiento que una roja real para efectos de "siguiente partido disputado").
+
+# --- Reglas de acumulación de amarillas ---
+# Tres reglas con alcances DISJUNTOS, que juntas definen qué amarilla acumula:
+#   (a) yellows_in_red_match_count_for_accumulation (arriba): amarilla ANTES de la
+#       propia roja directa -> SÍ acumula (amonestación independiente).
+#   (b) post_red_own_yellow_treatment: amarilla DESPUÉS de la propia roja -> NO
+#       acumula (es imposible en cancha: error de captura).
+#   (c) double_yellow_pair_counts_for_accumulation: el PAR de amarillas que ES la
+#       expulsión -> NO acumula (ya se sancionó con la expulsión).
+# No se contradicen porque cada una cubre un momento distinto: antes de una roja
+# ajena al par, después de una roja, y el par mismo.
+
+accumulation_yellows_threshold: 5
+  # Del reglamento (CLAUDE.md sección 4): 5 amarillas acumuladas = 1 partido.
+  # Parametrizado para no hardcodearlo; dispara cada vez que se alcanza el múltiplo.
+
+double_yellow_pair_counts_for_accumulation: false
+  # SUPUESTO: las dos amarillas de una expulsión por doble amarilla NO suman
+  # además a la acumulación: esa conducta ya se sancionó con la expulsión y su
+  # suspensión, contarlas otra vez sería sancionar dos veces lo mismo.
+  # Verificado: no cambia ningún caso. El único caso de acumulación (Rodrigo Anaya
+  # Lozano, Club Santa Tere) son 5 amarillas individuales en 5 partidos distintos
+  # (J1, J2, J4, J6 y J7), ninguna proveniente de una doble amarilla.
 
 post_red_own_yellow_treatment: ignore_for_accumulation_keep_in_log
   # Caso R09 (ej. Raúl Reyes Chávez, P053: roja min 56, amarilla min 86 del MISMO jugador

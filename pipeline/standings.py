@@ -20,9 +20,22 @@ MAX_ENUMERABLE_MATCHES = 12
 
 @dataclass(frozen=True)
 class ForfeitOverride:
+    """Un forfeit por partido y equipo infractor (single_forfeit_not_cumulative).
+
+    Guarda el CONJUNTO de tipos de infracción porque un mismo equipo puede tener
+    varios infractores en el mismo partido por vías distintas (P044: Rodrigo Anaya
+    Lozano por acumulación de 5 amarillas y Héctor Reyes Lozano por doble amarilla).
+    """
+
     id_partido: str
     infractor_team: str
-    trigger_type: TriggerType
+    trigger_types: frozenset[TriggerType]
+
+    @property
+    def solo_por_doble_amarilla(self) -> bool:
+        """El forfeit desaparece al quitar la regla de doble amarilla solo si
+        TODOS sus infractores lo son por esa vía."""
+        return self.trigger_types == {"double_yellow"}
 
 
 def compute_field_scores(matches_valid: pd.DataFrame) -> pd.DataFrame:
@@ -111,7 +124,9 @@ def _group_by_key(teams: list[str], key_fn: Callable[[str], float]) -> list[list
     return groups
 
 
-def _minitable_points(group: list[str], scores: pd.DataFrame) -> dict[str, int]:
+def minitable_points(group: list[str], scores: pd.DataFrame) -> dict[str, int]:
+    """Puntos de la minitabla entre los equipos empatados (art. 18, pasos 1-2).
+    Público porque el sitio debe poder mostrar el desempate explicado."""
     sub = scores[scores["local"].isin(group) & scores["visitante"].isin(group)]
     pts = {t: 0 for t in group}
     for _, row in sub.iterrows():
@@ -171,7 +186,7 @@ def _rank_group(
     criterion, *rest = criteria_queue
 
     if criterion == "head_to_head_or_minitable":
-        mini_pts = _minitable_points(group, scores)
+        mini_pts = minitable_points(group, scores)
         subgroups = _group_by_key(group, lambda t: mini_pts[t])
     elif criterion == "goal_diff":
         dg = dict(zip(table["equipo"], table["dg"]))
@@ -263,7 +278,7 @@ def build_standings_scenarios(
     assumptions: dict,
     findings: Optional[FindingsLog] = None,
 ) -> dict[str, pd.DataFrame]:
-    sin_doble_amarilla = [o for o in all_overrides if o.trigger_type != "double_yellow"]
+    sin_doble_amarilla = [o for o in all_overrides if not o.solo_por_doble_amarilla]
     scenarios = {
         "en_cancha": [],
         "oficial": all_overrides,

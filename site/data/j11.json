@@ -1,0 +1,132 @@
+{
+  "clasificados": [
+    "Atlético Tlaquepaque",
+    "Sporting Americana"
+  ],
+  "eliminados": [
+    "Halcones del Country",
+    "Tapatíos United"
+  ],
+  "en_disputa": [
+    "Club Santa Tere",
+    "Juventud Mezquitán",
+    "Racing Jardines",
+    "Estrella Providencia",
+    "Unión Zapopan",
+    "Leones de Tonalá",
+    "Deportivo Oblatos",
+    "Real Chapalita"
+  ],
+  "partidos_restantes": {
+    "Atlético Tlaquepaque": 1,
+    "Sporting Americana": 2,
+    "Club Santa Tere": 1,
+    "Juventud Mezquitán": 1,
+    "Racing Jardines": 2,
+    "Estrella Providencia": 1,
+    "Unión Zapopan": 1,
+    "Leones de Tonalá": 1,
+    "Deportivo Oblatos": 1,
+    "Real Chapalita": 1,
+    "Halcones del Country": 1,
+    "Tapatíos United": 1
+  },
+  "puntos_min": {
+    "Atlético Tlaquepaque": 20,
+    "Sporting Americana": 17,
+    "Club Santa Tere": 16,
+    "Juventud Mezquitán": 16,
+    "Racing Jardines": 16,
+    "Estrella Providencia": 15,
+    "Unión Zapopan": 15,
+    "Leones de Tonalá": 14,
+    "Deportivo Oblatos": 13,
+    "Real Chapalita": 11,
+    "Halcones del Country": 9,
+    "Tapatíos United": 5
+  },
+  "puntos_max": {
+    "Atlético Tlaquepaque": 23,
+    "Sporting Americana": 23,
+    "Club Santa Tere": 19,
+    "Juventud Mezquitán": 19,
+    "Racing Jardines": 22,
+    "Estrella Providencia": 18,
+    "Unión Zapopan": 18,
+    "Leones de Tonalá": 17,
+    "Deportivo Oblatos": 16,
+    "Real Chapalita": 14,
+    "Halcones del Country": 12,
+    "Tapatíos United": 8
+  },
+  "peor_posicion": {
+    "Atlético Tlaquepaque": 3,
+    "Sporting Americana": 7,
+    "Club Santa Tere": 9,
+    "Juventud Mezquitán": 9,
+    "Racing Jardines": 9,
+    "Estrella Providencia": 9,
+    "Unión Zapopan": 9,
+    "Leones de Tonalá": 10,
+    "Deportivo Oblatos": 10,
+    "Real Chapalita": 11,
+    "Halcones del Country": 11,
+    "Tapatíos United": 12
+  },
+  "mejor_posicion": {
+    "Atlético Tlaquepaque": 1,
+    "Sporting Americana": 1,
+    "Club Santa Tere": 2,
+    "Juventud Mezquitán": 2,
+    "Racing Jardines": 1,
+    "Estrella Providencia": 3,
+    "Unión Zapopan": 3,
+    "Leones de Tonalá": 3,
+    "Deportivo Oblatos": 4,
+    "Real Chapalita": 8,
+    "Halcones del Country": 10,
+    "Tapatíos United": 12
+  },
+  "escenarios_evaluados": 2187,
+  "fixtures_pendientes": [
+    {
+      "local": "Atlético Tlaquepaque",
+      "visitante": "Deportivo Oblatos",
+      "origen": "J11 (derivado del round-robin)"
+    },
+    {
+      "local": "Club Santa Tere",
+      "visitante": "Sporting Americana",
+      "origen": "J11 (derivado del round-robin)"
+    },
+    {
+      "local": "Estrella Providencia",
+      "visitante": "Halcones del Country",
+      "origen": "J11 (derivado del round-robin)"
+    },
+    {
+      "local": "Juventud Mezquitán",
+      "visitante": "Unión Zapopan",
+      "origen": "J11 (derivado del round-robin)"
+    },
+    {
+      "local": "Leones de Tonalá",
+      "visitante": "Tapatíos United",
+      "origen": "J11 (derivado del round-robin)"
+    },
+    {
+      "local": "Racing Jardines",
+      "visitante": "Real Chapalita",
+      "origen": "J11 (derivado del round-robin)"
+    }
+  ],
+  "reprogramacion_pendiente": [
+    {
+      "id_partido": "P042",
+      "jornada": 7,
+      "local": "Racing Jardines",
+      "visitante": "Sporting Americana",
+      "estatus": "Suspendido"
+    }
+  ]
+}

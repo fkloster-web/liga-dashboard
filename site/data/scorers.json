@@ -1,0 +1,923 @@
+{
+  "correcto": [
+    {
+      "posicion": 1,
+      "id_jugador": "J205",
+      "nombre": "Víctor Navarro Morales",
+      "equipo": "Racing Jardines",
+      "goles": 4
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J179",
+      "nombre": "Andrés Ruiz Rojas",
+      "equipo": "Juventud Mezquitán",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J188",
+      "nombre": "Carlos Flores Anaya",
+      "equipo": "Sporting Americana",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J171",
+      "nombre": "Emilio Ruiz Sánchez",
+      "equipo": "Juventud Mezquitán",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J168",
+      "nombre": "Fernando Morales Chávez",
+      "equipo": "Juventud Mezquitán",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J054",
+      "nombre": "Hugo Silva Ramírez",
+      "equipo": "Real Chapalita",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J027",
+      "nombre": "Iván Castillo Ruiz",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J093",
+      "nombre": "Iván Cruz García",
+      "equipo": "Leones de Tonalá",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J147",
+      "nombre": "Juan Carlos Pérez Ruiz",
+      "equipo": "Tapatíos United",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J117",
+      "nombre": "Sergio Vázquez Hernández",
+      "equipo": "Estrella Providencia",
+      "goles": 3
+    },
+    {
+      "posicion": 2,
+      "id_jugador": "J038",
+      "nombre": "Óscar Aguilar García",
+      "equipo": "Real Chapalita",
+      "goles": 3
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J012",
+      "nombre": "Adrián Díaz Ortiz",
+      "equipo": "Deportivo Oblatos",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J080",
+      "nombre": "Adrián Martínez Chávez",
+      "equipo": "Unión Zapopan",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J076",
+      "nombre": "Alejandro González Gutiérrez",
+      "equipo": "Unión Zapopan",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J018",
+      "nombre": "Alejandro Medina Díaz",
+      "equipo": "Deportivo Oblatos",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J016",
+      "nombre": "Eduardo Reyes Ortiz",
+      "equipo": "Deportivo Oblatos",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J200",
+      "nombre": "Emilio Torres Ortiz",
+      "equipo": "Racing Jardines",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J206",
+      "nombre": "Fernando Ramírez Rojas",
+      "equipo": "Racing Jardines",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J143",
+      "nombre": "Fernando Silva López",
+      "equipo": "Halcones del Country",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J194",
+      "nombre": "Iván Ramírez Silva",
+      "equipo": "Sporting Americana",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J104",
+      "nombre": "José Navarro López",
+      "equipo": "Leones de Tonalá",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J069",
+      "nombre": "José Silva Reyes",
+      "equipo": "Club Santa Tere",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J040",
+      "nombre": "Juan Carlos Pérez Ruiz",
+      "equipo": "Real Chapalita",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J097",
+      "nombre": "Luis Anaya Medina",
+      "equipo": "Leones de Tonalá",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J139",
+      "nombre": "Mario García Navarro",
+      "equipo": "Halcones del Country",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J158",
+      "nombre": "Miguel Cruz Vázquez",
+      "equipo": "Tapatíos United",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J042",
+      "nombre": "Miguel Delgado Gutiérrez",
+      "equipo": "Real Chapalita",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J007",
+      "nombre": "Pablo Torres Ruiz",
+      "equipo": "Deportivo Oblatos",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J177",
+      "nombre": "Ricardo Torres Flores",
+      "equipo": "Juventud Mezquitán",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J100",
+      "nombre": "Sergio González Ruiz",
+      "equipo": "Leones de Tonalá",
+      "goles": 2
+    },
+    {
+      "posicion": 12,
+      "id_jugador": "J178",
+      "nombre": "Sergio Navarro Ramírez",
+      "equipo": "Juventud Mezquitán",
+      "goles": 2
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J064",
+      "nombre": "Alejandro González García",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J060",
+      "nombre": "Andrés Anaya Rodríguez",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J186",
+      "nombre": "Andrés Flores Mendoza",
+      "equipo": "Sporting Americana",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J075",
+      "nombre": "Arturo García Medina",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J216",
+      "nombre": "Arturo González Lozano",
+      "equipo": "Racing Jardines",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J017",
+      "nombre": "Arturo López Martínez",
+      "equipo": "Deportivo Oblatos",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J146",
+      "nombre": "Arturo Mendoza González",
+      "equipo": "Tapatíos United",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J121",
+      "nombre": "Arturo Ramírez Cruz",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J041",
+      "nombre": "Arturo Vázquez Gutiérrez",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J105",
+      "nombre": "Carlos Aguilar Delgado",
+      "equipo": "Leones de Tonalá",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J136",
+      "nombre": "Carlos García Hernández",
+      "equipo": "Halcones del Country",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J153",
+      "nombre": "Carlos Ibarra Chávez",
+      "equipo": "Tapatíos United",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J138",
+      "nombre": "Daniel Ortiz Ruiz",
+      "equipo": "Halcones del Country",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J116",
+      "nombre": "Diego Díaz Sánchez",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J195",
+      "nombre": "Diego González González",
+      "equipo": "Sporting Americana",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J215",
+      "nombre": "Diego Gutiérrez Morales",
+      "equipo": "Racing Jardines",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J125",
+      "nombre": "Diego Hernández Anaya",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J005",
+      "nombre": "Diego Hernández Ruiz",
+      "equipo": "Deportivo Oblatos",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J003",
+      "nombre": "Diego Navarro Navarro",
+      "equipo": "Deportivo Oblatos",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J144",
+      "nombre": "Diego Reyes Medina",
+      "equipo": "Halcones del Country",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J085",
+      "nombre": "Emilio Anaya Sánchez",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J081",
+      "nombre": "Emilio García Medina",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J077",
+      "nombre": "Emilio Hernández Díaz",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J098",
+      "nombre": "Fernando Medina González",
+      "equipo": "Leones de Tonalá",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J145",
+      "nombre": "Fernando Navarro Reyes",
+      "equipo": "Tapatíos United",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J033",
+      "nombre": "Fernando Torres García",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J109",
+      "nombre": "Fernando Vázquez Silva",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J026",
+      "nombre": "Gerardo Gutiérrez López",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J165",
+      "nombre": "Gerardo Hernández Flores",
+      "equipo": "Juventud Mezquitán",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J039",
+      "nombre": "Gerardo Sánchez Aguilar",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J111",
+      "nombre": "Hugo Chávez Ruiz",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J133",
+      "nombre": "Hugo Cruz Silva",
+      "equipo": "Halcones del Country",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J045",
+      "nombre": "Hugo Flores Gutiérrez",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J025",
+      "nombre": "Hugo Ramírez Castillo",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J046",
+      "nombre": "Héctor García Sánchez",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J112",
+      "nombre": "Héctor Gutiérrez Ramírez",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J173",
+      "nombre": "Iván Aguilar Medina",
+      "equipo": "Juventud Mezquitán",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J036",
+      "nombre": "Iván Anaya Delgado",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J082",
+      "nombre": "Iván Díaz Aguilar",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J087",
+      "nombre": "Iván Díaz López",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J107",
+      "nombre": "Iván García Díaz",
+      "equipo": "Leones de Tonalá",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J047",
+      "nombre": "Jorge Cruz Ruiz",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J028",
+      "nombre": "Jorge Ibarra Morales",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J044",
+      "nombre": "Jorge Martínez Reyes",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J086",
+      "nombre": "Jorge Morales Martínez",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J187",
+      "nombre": "Jorge Rojas Chávez",
+      "equipo": "Sporting Americana",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J131",
+      "nombre": "Jorge Torres Reyes",
+      "equipo": "Halcones del Country",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J072",
+      "nombre": "José Flores Sánchez",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J032",
+      "nombre": "José Gutiérrez Ibarra",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J203",
+      "nombre": "José Morales Cruz",
+      "equipo": "Racing Jardines",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J198",
+      "nombre": "José Silva González",
+      "equipo": "Sporting Americana",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J126",
+      "nombre": "Juan Vázquez Rodríguez",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J166",
+      "nombre": "Luis Ibarra Rojas",
+      "equipo": "Juventud Mezquitán",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J175",
+      "nombre": "Luis Lozano Lozano",
+      "equipo": "Juventud Mezquitán",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J174",
+      "nombre": "Mario Delgado Torres",
+      "equipo": "Juventud Mezquitán",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J214",
+      "nombre": "Miguel Aguilar Gutiérrez",
+      "equipo": "Racing Jardines",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J008",
+      "nombre": "Miguel Mendoza Mendoza",
+      "equipo": "Deportivo Oblatos",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J180",
+      "nombre": "Miguel Rodríguez Navarro",
+      "equipo": "Juventud Mezquitán",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J113",
+      "nombre": "Miguel Rojas Ibarra",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J199",
+      "nombre": "Omar Aguilar García",
+      "equipo": "Racing Jardines",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J062",
+      "nombre": "Omar Reyes Castillo",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J006",
+      "nombre": "Ricardo Morales González",
+      "equipo": "Deportivo Oblatos",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J056",
+      "nombre": "Rodrigo Anaya Lozano",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J049",
+      "nombre": "Rubén Delgado Flores",
+      "equipo": "Real Chapalita",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J029",
+      "nombre": "Rubén Morales Vázquez",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J090",
+      "nombre": "Rubén Navarro Rojas",
+      "equipo": "Unión Zapopan",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J019",
+      "nombre": "Rubén Rojas López",
+      "equipo": "Atlético Tlaquepaque",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J160",
+      "nombre": "Sergio García Rodríguez",
+      "equipo": "Tapatíos United",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J059",
+      "nombre": "Sergio Silva Cruz",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J129",
+      "nombre": "Víctor Anaya Cruz",
+      "equipo": "Halcones del Country",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J114",
+      "nombre": "Víctor Gutiérrez Ruiz",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J067",
+      "nombre": "Víctor Lozano Vázquez",
+      "equipo": "Club Santa Tere",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J124",
+      "nombre": "Óscar Díaz Ruiz",
+      "equipo": "Estrella Providencia",
+      "goles": 1
+    },
+    {
+      "posicion": 32,
+      "id_jugador": "J209",
+      "nombre": "Óscar Rojas Castillo",
+      "equipo": "Racing Jardines",
+      "goles": 1
+    }
+  ],
+  "publicado": [
+    {
+      "Pos": 1,
+      "Jugador": "Juan Carlos Pérez Ruiz",
+      "Equipo": "Tapatíos United",
+      "Goles": 5
+    },
+    {
+      "Pos": 2,
+      "Jugador": "Andrés Ruiz Rojas",
+      "Equipo": "Juventud Mezquitán",
+      "Goles": 4
+    },
+    {
+      "Pos": 3,
+      "Jugador": "Víctor Navarro Morales",
+      "Equipo": "Racing Jardines",
+      "Goles": 4
+    },
+    {
+      "Pos": 4,
+      "Jugador": "Fernando Morales Chávez",
+      "Equipo": "Juventud Mezquitán",
+      "Goles": 3
+    },
+    {
+      "Pos": 5,
+      "Jugador": "Emilio Ruiz Sánchez",
+      "Equipo": "Juventud Mezquitán",
+      "Goles": 3
+    },
+    {
+      "Pos": 6,
+      "Jugador": "Sergio Vázquez Hernández",
+      "Equipo": "Estrella Providencia",
+      "Goles": 3
+    },
+    {
+      "Pos": 7,
+      "Jugador": "Hugo Silva Ramírez",
+      "Equipo": "Real Chapalita",
+      "Goles": 3
+    },
+    {
+      "Pos": 8,
+      "Jugador": "Iván Castillo Ruiz",
+      "Equipo": "Atlético Tlaquepaque",
+      "Goles": 3
+    },
+    {
+      "Pos": 9,
+      "Jugador": "Óscar Aguilar García",
+      "Equipo": "Real Chapalita",
+      "Goles": 3
+    },
+    {
+      "Pos": 10,
+      "Jugador": "Carlos Flores Anaya",
+      "Equipo": "Sporting Americana",
+      "Goles": 3
+    }
+  ],
+  "comparacion": [
+    {
+      "jugador": "Juan Carlos Pérez Ruiz",
+      "equipo_publicado": "Tapatíos United",
+      "id_jugador": "J147",
+      "goles_publicado": 5,
+      "goles_correcto": 3,
+      "diferencia": 2,
+      "tipo": "discrepancia",
+      "motivo": "agrupa por nombre: suma los goles de homónimos de Real Chapalita (2) al jugador de Tapatíos United"
+    },
+    {
+      "jugador": "Andrés Ruiz Rojas",
+      "equipo_publicado": "Juventud Mezquitán",
+      "id_jugador": "J179",
+      "goles_publicado": 4,
+      "goles_correcto": 3,
+      "diferencia": 1,
+      "tipo": "discrepancia",
+      "motivo": "cuenta 1 autogol(es) como gol a favor"
+    },
+    {
+      "jugador": "Víctor Navarro Morales",
+      "equipo_publicado": "Racing Jardines",
+      "id_jugador": "J205",
+      "goles_publicado": 4,
+      "goles_correcto": 4,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Fernando Morales Chávez",
+      "equipo_publicado": "Juventud Mezquitán",
+      "id_jugador": "J168",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Emilio Ruiz Sánchez",
+      "equipo_publicado": "Juventud Mezquitán",
+      "id_jugador": "J171",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Sergio Vázquez Hernández",
+      "equipo_publicado": "Estrella Providencia",
+      "id_jugador": "J117",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Hugo Silva Ramírez",
+      "equipo_publicado": "Real Chapalita",
+      "id_jugador": "J054",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Iván Castillo Ruiz",
+      "equipo_publicado": "Atlético Tlaquepaque",
+      "id_jugador": "J027",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Óscar Aguilar García",
+      "equipo_publicado": "Real Chapalita",
+      "id_jugador": "J038",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Carlos Flores Anaya",
+      "equipo_publicado": "Sporting Americana",
+      "id_jugador": "J188",
+      "goles_publicado": 3,
+      "goles_correcto": 3,
+      "diferencia": 0,
+      "tipo": "coincide",
+      "motivo": null
+    },
+    {
+      "jugador": "Iván Cruz García",
+      "equipo_publicado": null,
+      "id_jugador": "J093",
+      "goles_publicado": 0,
+      "goles_correcto": 3,
+      "diferencia": -3,
+      "tipo": "omitido",
+      "motivo": "omitido del goleo publicado pese a tener 3 goles (corte de la lista publicada: 3)"
+    }
+  ],
+  "autogoles": 7,
+  "goles_sin_autor": [
+    {
+      "id_partido": "P011",
+      "equipo": "Estrella Providencia",
+      "goles_oficiales": 4,
+      "goles_con_autor": 3,
+      "goles_sin_autor": 1
+    }
+  ]
+}
