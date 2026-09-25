@@ -269,6 +269,29 @@ tr.corte-liguilla td {
 table.datos td.motivo { white-space: normal; max-width: 60ch; }
 #tabla-linea-tiempo thead th { white-space: normal; vertical-align: bottom; }
 
+/* ---------- Calidad de datos: filtros y severidad ---------- */
+.filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1.25rem; margin: 1rem 0 .5rem; }
+.filtros label { display: flex; flex-direction: column; gap: .25rem; font-size: .78rem; color: var(--texto-suave); }
+.filtros select, .filtros button {
+  font: inherit;
+  font-size: .9rem;
+  color: var(--texto);
+  background: var(--bg-elevado);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: .4rem .6rem;
+}
+.filtros button { cursor: pointer; color: var(--acento); font-weight: 600; }
+.filtros select:focus-visible, .filtros button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.conteo-filtro { color: var(--texto-suave); font-size: .85rem; margin: 0 0 .75rem; }
+.sev-critical { color: var(--error); }
+.sev-warning { color: var(--aviso-texto); }
+.sev-info { color: var(--texto-suave); }
+table.datos td.nota-hallazgo { white-space: normal; min-width: 34ch; max-width: 56ch; }
+#tabla-hallazgos th, #tabla-hallazgos td { padding-left: .5rem; padding-right: .5rem; }
+#tabla-hallazgos .nota-fila { white-space: nowrap; }
+table.datos td.sin-valor { color: var(--texto-suave); }
+
 details.detalle-tabla { margin: 1rem 0 1.5rem; }
 details.detalle-tabla summary {
   cursor: pointer;
@@ -666,6 +689,49 @@ footer {
     <h2 id="calidad-titulo">6. Calidad de datos</h2>
     <p class="descripcion">Log de hallazgos, filtrable por regla, hoja y severidad.</p>
     <div class="placeholder" data-seccion="calidad">Cargando datos…</div>
+    <div id="calidad-contenido" hidden>
+
+      <h3>Resumen</h3>
+      <div class="kpis" id="calidad-kpis"></div>
+      <p id="calidad-parrafo"></p>
+
+      <div class="bloque">
+        <h3>Log de hallazgos</h3>
+        <p class="descripcion">Cada corrección, exclusión o marca aplicada a los datos, con su regla, el registro afectado y el valor antes y después.</p>
+        <div class="filtros">
+          <label>Regla
+            <select id="filtro-regla"><option value="">Todas</option></select>
+          </label>
+          <label>Hoja
+            <select id="filtro-hoja"><option value="">Todas</option></select>
+          </label>
+          <label>Severidad
+            <select id="filtro-severidad"><option value="">Todas</option></select>
+          </label>
+          <button type="button" id="filtro-limpiar">Limpiar filtros</button>
+        </div>
+        <p class="conteo-filtro" id="calidad-conteo" aria-live="polite"></p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-hallazgos">
+            <caption>Hallazgos de calidad de datos, en el orden en que los registró el pipeline.</caption>
+            <thead>
+              <tr>
+                <th class="izq" scope="col">Regla</th>
+                <th class="izq" scope="col">Severidad</th>
+                <th class="izq" scope="col">Hoja</th>
+                <th class="izq" scope="col">Registro afectado</th>
+                <th class="izq" scope="col">Valor original</th>
+                <th class="izq" scope="col">Valor corregido</th>
+                <th class="izq" scope="col">Acción</th>
+                <th class="izq" scope="col">Nota</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-hallazgos-cuerpo"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
   </section>
 
   <section id="proceso" aria-labelledby="proceso-titulo">
@@ -1632,9 +1698,177 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('calidad', ['findings_log'], (hallazgos) =>
-  `${hallazgos.length} hallazgos de ` +
-  `${new Set(hallazgos.map((h) => h.rule_id)).size} reglas distintas.`);
+(function seccionCalidad() {
+  // Nombres cortos de las reglas (CLAUDE.md §5); una regla sin nombre se muestra por su id.
+  const REGLA_NOMBRE = {
+    R01: 'Nombres de equipo', R02: 'Fechas mixtas', R03: 'Partido duplicado', R04: 'Partido no jugado',
+    R05: 'Llave de jugador', R06: 'Autogoles', R07: 'Marcador vs eventos', R08: 'Eventos duplicados',
+    R09: 'Eventos imposibles', R10: 'Doble amarilla sin roja', R11: 'Elegibilidad por registro',
+    R12: 'Datos posteriores al corte', ART32: 'Alineación indebida (art. 32)',
+    GOLEO_PUBLICADO: 'Errores del goleo publicado',
+  };
+  const ACCION = {
+    corrected: 'Corregido', flagged: 'Marcado', documented_no_action: 'Documentado, sin cambio',
+    deduplicated: 'Duplicado eliminado', excluded: 'Excluido',
+  };
+  const SEVERIDAD = {
+    critical: { clase: 'sev-critical', glifo: '✕', texto: 'Crítico', orden: 0 },
+    warning: { clase: 'sev-warning', glifo: '▲', texto: 'Advertencia', orden: 1 },
+    info: { clase: 'sev-info', glifo: '◦', texto: 'Info', orden: 2 },
+  };
+  const FILTROS = ['filtro-regla', 'filtro-hoja', 'filtro-severidad'];
+
+  const etiquetaRegla = (id) => (REGLA_NOMBRE[id] ? `${id} · ${REGLA_NOMBRE[id]}` : id);
+  const sev = (id) => SEVERIDAD[id] || { clase: 'sev-info', glifo: '◦', texto: id, orden: 9 };
+
+  function celda(texto, clase) {
+    const td = document.createElement('td');
+    td.className = clase ? `izq ${clase}` : 'izq';
+    td.textContent = texto;
+    return td;
+  }
+
+  function celdaValor(valor) {
+    return valor === null || valor === undefined ? celda('—', 'sin-valor') : celda(valor);
+  }
+
+  function kpi(valor, etiqueta) {
+    const caja = document.createElement('div');
+    const v = document.createElement('div');
+    v.className = 'kpi-valor';
+    v.textContent = valor;
+    const l = document.createElement('div');
+    l.className = 'kpi-etiqueta';
+    l.textContent = etiqueta;
+    caja.append(v, l);
+    return caja;
+  }
+
+  function contar(hallazgos, campo) {
+    const m = new Map();
+    hallazgos.forEach((h) => m.set(h[campo], (m.get(h[campo]) || 0) + 1));
+    return m;
+  }
+
+  function renderResumen(hallazgos) {
+    const porSev = contar(hallazgos, 'severity');
+    const kpis = document.getElementById('calidad-kpis');
+    kpis.append(kpi(hallazgos.length, 'hallazgos en total'));
+    Object.entries(SEVERIDAD)
+      .sort((a, b) => a[1].orden - b[1].orden)
+      .forEach(([id, def]) => kpis.append(kpi(porSev.get(id) || 0, `de severidad ${def.texto.toLowerCase()}`)));
+
+    const porRegla = [...contar(hallazgos, 'rule_id')].sort((a, b) => b[1] - a[1]);
+    const maximo = porRegla[0][1];
+    const lideres = porRegla.filter(([, n]) => n === maximo).map(([id]) => etiquetaRegla(id));
+    const pct = (n) => `${Math.round((100 * n) / hallazgos.length)}%`;
+    const segundo = porRegla.find(([, n]) => n < maximo);
+    document.getElementById('calidad-parrafo').textContent =
+      `Los ${hallazgos.length} hallazgos provienen de ${porRegla.length} reglas distintas. ` +
+      (lideres.length === 1
+        ? `La regla que más hallazgos generó fue ${lideres[0]}, con ${maximo} (${pct(maximo)}).`
+        : `Empatan como las que más hallazgos generaron: ${lideres.join(' y ')}, con ${maximo} cada una.`) +
+      (segundo ? ` Le sigue ${etiquetaRegla(segundo[0])}, con ${segundo[1]}.` : '');
+  }
+
+  function poblarFiltros(hallazgos) {
+    const unicos = (campo) => [...new Set(hallazgos.map((h) => h[campo]))];
+    const reglas = unicos('rule_id').sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+    const hojas = unicos('sheet').sort((a, b) => a.localeCompare(b, 'es'));
+    const severidades = unicos('severity').sort((a, b) => sev(a).orden - sev(b).orden);
+    const opciones = (id, valores, etiqueta) => {
+      const select = document.getElementById(id);
+      valores.forEach((v) => select.append(new Option(etiqueta(v), v)));
+    };
+    opciones('filtro-regla', reglas, etiquetaRegla);
+    opciones('filtro-hoja', hojas, (h) => h);
+    opciones('filtro-severidad', severidades, (v) => sev(v).texto);
+  }
+
+  function celdaSeveridad(id) {
+    const s = sev(id);
+    const td = document.createElement('td');
+    td.className = 'izq';
+    const marca = document.createElement('span');
+    marca.className = `estado ${s.clase}`;
+    const glifo = document.createElement('span');
+    glifo.className = 'glifo';
+    glifo.setAttribute('aria-hidden', 'true');
+    glifo.textContent = s.glifo;
+    marca.append(glifo, document.createTextNode(s.texto));
+    td.append(marca);
+    return td;
+  }
+
+  function conNota(td, texto) {
+    if (!texto) return td;
+    const nota = document.createElement('span');
+    nota.className = 'nota-fila';
+    nota.textContent = texto;
+    td.append(nota);
+    return td;
+  }
+
+  function renderTabla(hallazgos) {
+    const filtro = {
+      rule_id: document.getElementById('filtro-regla').value,
+      sheet: document.getElementById('filtro-hoja').value,
+      severity: document.getElementById('filtro-severidad').value,
+    };
+    const visibles = hallazgos.filter((h) => Object.entries(filtro).every(([k, v]) => !v || h[k] === v));
+    const cuerpo = document.getElementById('tabla-hallazgos-cuerpo');
+    cuerpo.innerHTML = '';
+
+    visibles.forEach((h, i) => {
+      const tr = document.createElement('tr');
+      if (i % 2 === 1) tr.className = 'par';
+      tr.append(
+        conNota(celda(h.rule_id), REGLA_NOMBRE[h.rule_id]),
+        celdaSeveridad(h.severity),
+        celda(h.sheet),
+        conNota(celda(h.record_id), h.field ? `campo: ${h.field}` : ''),
+        celdaValor(h.original_value),
+        celdaValor(h.corrected_value),
+        celda(ACCION[h.action] || h.action),
+        celda(h.note, 'nota-hallazgo'),
+      );
+      cuerpo.append(tr);
+    });
+
+    if (!visibles.length) {
+      const tr = document.createElement('tr');
+      const td = celda('Ningún hallazgo coincide con los filtros elegidos.', 'sin-valor');
+      td.colSpan = 8;
+      tr.append(td);
+      cuerpo.append(tr);
+    }
+    document.getElementById('calidad-conteo').textContent =
+      `Mostrando ${visibles.length} de ${hallazgos.length} hallazgos.`;
+  }
+
+  function render(hallazgos) {
+    renderResumen(hallazgos);
+    poblarFiltros(hallazgos);
+    renderTabla(hallazgos);
+    FILTROS.forEach((id) =>
+      document.getElementById(id).addEventListener('change', () => renderTabla(hallazgos)));
+    document.getElementById('filtro-limpiar').addEventListener('click', () => {
+      FILTROS.forEach((id) => { document.getElementById(id).value = ''; });
+      renderTabla(hallazgos);
+    });
+    document.querySelector('[data-seccion="calidad"]').hidden = true;
+    document.getElementById('calidad-contenido').hidden = false;
+  }
+
+  cargarDatos('findings_log')
+    .then(render)
+    .catch((error) => {
+      const caja = document.querySelector('[data-seccion="calidad"]');
+      caja.className = 'placeholder error';
+      caja.innerHTML = describirError(error);
+      console.error('[calidad]', error);
+    });
+})();
 </script>
 
 <script>
