@@ -292,6 +292,21 @@ table.datos td.nota-hallazgo { white-space: normal; min-width: 34ch; max-width: 
 #tabla-hallazgos .nota-fila { white-space: nowrap; }
 table.datos td.sin-valor { color: var(--texto-suave); }
 
+/* ---------- Parte 2: diagramas, pasos y mejoras ---------- */
+.diagrama { overflow-x: auto; margin: 1rem 0; }
+.diagrama pre.mermaid { margin: 0; background: none; padding: 0; text-align: center; font-family: var(--fuente); }
+.diagrama pre.mermaid svg { max-width: none; height: auto; }
+ol.pasos { max-width: 80ch; padding-left: 1.4rem; margin: 1rem 0; }
+ol.pasos li { margin-bottom: .6rem; }
+.etiqueta-paso { font-weight: 700; }
+.etiqueta-error { color: var(--error); }
+.etiqueta-mejora { color: var(--acento); }
+.nota-lane { color: var(--texto-suave); font-size: .85rem; }
+table.datos td.texto { text-align: left; white-space: normal; min-width: 13ch; vertical-align: top; }
+table.datos td.num { text-align: left; vertical-align: top; font-weight: 700; }
+ul.restricciones { max-width: 70ch; padding-left: 1.2rem; }
+ul.restricciones li { margin-bottom: .35rem; }
+
 details.detalle-tabla { margin: 1rem 0 1.5rem; }
 details.detalle-tabla summary {
   cursor: pointer;
@@ -738,12 +753,47 @@ footer {
     <h2 id="proceso-titulo">7. Proceso actual vs propuesto</h2>
     <p class="descripcion">Diagramas por responsable, con los puntos de error marcados.</p>
     <div class="placeholder" data-seccion="proceso">Cargando datos…</div>
+    <div id="proceso-contenido" hidden>
+
+      <h3>Proceso actual</h3>
+      <p id="proceso-actual-intro"></p>
+      <div class="diagrama"><pre class="mermaid" id="diagrama-actual"></pre></div>
+      <ol class="pasos" id="pasos-actual"></ol>
+      <p class="descripcion" id="proceso-actual-nota"></p>
+
+      <div class="bloque">
+        <h3>Proceso propuesto</h3>
+        <p id="proceso-propuesto-intro"></p>
+        <div class="diagrama"><pre class="mermaid" id="diagrama-propuesto"></pre></div>
+        <ol class="pasos" id="pasos-propuesto"></ol>
+        <p class="descripcion" id="proceso-propuesto-nota"></p>
+      </div>
+
+    </div>
   </section>
 
   <section id="mejoras" aria-labelledby="mejoras-titulo">
     <h2 id="mejoras-titulo">8. Mejoras priorizadas</h2>
     <p class="descripcion">Cada mejora con su problema, esfuerzo, impacto, riesgo, indicador y meta.</p>
     <div class="placeholder" data-seccion="mejoras">Cargando datos…</div>
+    <div id="mejoras-contenido" hidden>
+
+      <h3>Mejoras priorizadas</h3>
+      <div class="tabla-scroll">
+        <table class="datos" id="tabla-mejoras">
+          <caption>Numeradas por orden de implementación.</caption>
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="bloque">
+        <h3 id="restricciones-titulo"></h3>
+        <p class="descripcion" id="restricciones-intro"></p>
+        <ul class="restricciones" id="restricciones-lista"></ul>
+      </div>
+
+    </div>
   </section>
 
   <section id="metodologia" aria-labelledby="metodologia-titulo">
@@ -1872,14 +1922,232 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('proceso', ['parte2'], (texto) =>
-  `Contenido de la Parte 2 cargado (${texto.length} caracteres de markdown).`);
-</script>
+/* Secciones 7 (proceso) y 8 (mejoras): ambas salen de data/parte2.md, que
+   llega como markdown crudo. Solo se parsea lo que el archivo contiene:
+   secciones "## ", listas numeradas con **negritas**, una tabla y viñetas. */
+(function seccionesParte2() {
+  const CARRILES = ['Árbitro', 'Delegado', 'Coordinador', 'Comisión'];
+  const CARRIL_POR_DEFECTO = 'Coordinador';
 
-<script>
-registrarSeccion('mejoras', ['parte2'], (texto) =>
-  `Tabla de mejoras dentro del mismo markdown (${texto.length} caracteres), ` +
-  `servida desde la caché sin una segunda petición.`);
+  function secciones(md) {
+    const mapa = {};
+    let actual = null;
+    md.replace(/\r/g, '').split('\n').forEach((linea) => {
+      const h = linea.match(/^##\s+(.+)$/);
+      if (h) { actual = h[1].trim(); mapa[actual] = []; }
+      else if (actual) mapa[actual].push(linea);
+    });
+    return (prefijo) => {
+      const titulo = Object.keys(mapa).find((t) => t.startsWith(prefijo));
+      if (!titulo) throw new Error(`parte2.md no tiene la sección «${prefijo}…»`);
+      return { titulo, lineas: mapa[titulo] };
+    };
+  }
+
+  // "1. **[ERROR] Delegado** entrega ..." → { n, etiqueta, quien, texto }
+  function pasos(lineas) {
+    const lista = [], notas = [];
+    let paso = null;
+    lineas.forEach((linea) => {
+      const m = linea.match(/^(\d+)\.\s+\*\*(.+?)\*\*\s*(.*)$/);
+      if (m) {
+        const et = m[2].match(/^\[([^\]]+)\]\s*(.*)$/);
+        paso = { n: Number(m[1]), etiqueta: et ? et[1] : null, quien: et ? et[2] : m[2], texto: m[3] };
+        lista.push(paso);
+      } else if (/^\s+\S/.test(linea) && paso) {
+        paso.texto += ' ' + linea.trim();
+      } else if (!linea.trim()) {
+        paso = null;
+      } else {
+        notas.push(linea.trim());
+      }
+    });
+    lista.forEach((p) => {
+      p.texto = p.texto.replace(/^[:—-]\s*/, '').trim();
+      Object.assign(p, carrilDe(p.quien)); // carril e inferido (sin responsable en el md)
+    });
+    return { lista, notas };
+  }
+
+  const carrilDe = (quien) => {
+    const hallados = CARRILES
+      .map((c) => ({ c, i: quien.search(new RegExp(c, 'i')) }))
+      .filter((x) => x.i >= 0)
+      .sort((a, b) => a.i - b.i);
+    return hallados.length ? { carril: hallados[0].c, inferido: false } : { carril: CARRIL_POR_DEFECTO, inferido: true };
+  };
+
+  // Resumen para el nodo: hasta el primer " — " o fin de oración, acortado.
+  function resumen(texto) {
+    let s = texto.split(/\s—\s|\.\s/)[0].replace(/\.$/, '');
+    if (s.length > 80) s = s.slice(0, 80).replace(/\s+\S*$/, '') + '…';
+    return s;
+  }
+
+  const limpiarMermaid = (s) => s.replace(/"/g, '#quot;');
+
+  function aMermaid(prefijo, lista) {
+    const porCarril = new Map();
+    lista.forEach((p) => {
+      if (!porCarril.has(p.carril)) porCarril.set(p.carril, []);
+      porCarril.get(p.carril).push(p);
+    });
+    const orden = CARRILES.filter((c) => porCarril.has(c));
+    const id = (p) => `${prefijo}${p.n}`;
+    const esError = (p) => p.etiqueta && /^ERROR/i.test(p.etiqueta);
+    const esRaiz = (p) => esError(p) && /CAUSA/i.test(p.etiqueta);
+    const esMejora = (p) => p.etiqueta && /^Mejora/i.test(p.etiqueta);
+
+    const nodo = (p) => {
+      const cabecera = p.etiqueta ? `<b>[${limpiarMermaid(p.etiqueta)}]</b><br/>` : '';
+      // "Paso n ·" y no "n." al inicio: Mermaid lo tomaría por una lista markdown.
+      const quien = p.inferido ? `Paso ${p.n} · ${p.quien} (${p.carril})` : `Paso ${p.n} · ${p.quien}`;
+      return `${id(p)}["${cabecera}${limpiarMermaid(quien)}<br/>${limpiarMermaid(resumen(p.texto))}"]`;
+    };
+
+    const l = ['flowchart TB'];
+    orden.forEach((c, i) => {
+      l.push(`  subgraph L${prefijo}${i}["${c}"]`);
+      porCarril.get(c).forEach((p) => l.push(`    ${nodo(p)}`));
+      l.push('  end');
+    });
+    lista.slice(1).forEach((p, i) => l.push(`  ${id(lista[i])} --> ${id(p)}`));
+    l.push('  classDef error fill:#b42318,stroke:#7a1610,color:#ffffff;');
+    l.push('  classDef raiz fill:#b42318,stroke:#ffb4a8,stroke-width:4px,color:#ffffff;');
+    l.push('  classDef mejora fill:#2563eb,stroke:#1e40af,color:#ffffff;');
+    const ids = (f) => lista.filter(f).map(id).join(',');
+    if (lista.some((p) => esError(p) && !esRaiz(p))) l.push(`  class ${ids((p) => esError(p) && !esRaiz(p))} error;`);
+    if (lista.some(esRaiz)) l.push(`  class ${ids(esRaiz)} raiz;`);
+    if (lista.some(esMejora)) l.push(`  class ${ids(esMejora)} mejora;`);
+    return l.join('\n');
+  }
+
+  // Escapa el texto y convierte **negritas** del markdown.
+  function inline(el, texto) {
+    texto.split(/(\*\*.+?\*\*)/).forEach((trozo) => {
+      const b = trozo.match(/^\*\*(.+)\*\*$/);
+      if (b) { const s = document.createElement('strong'); s.textContent = b[1]; el.append(s); }
+      else if (trozo) el.append(document.createTextNode(trozo));
+    });
+  }
+
+  function listaPasos(ol, lista) {
+    lista.forEach((p) => {
+      const li = document.createElement('li');
+      li.value = p.n;
+      if (p.etiqueta) {
+        const et = document.createElement('span');
+        et.className = `etiqueta-paso ${/^ERROR/i.test(p.etiqueta) ? 'etiqueta-error' : 'etiqueta-mejora'}`;
+        et.textContent = `[${p.etiqueta}]`;
+        li.append(et, document.createTextNode(' '));
+      }
+      const quien = document.createElement('strong');
+      quien.textContent = p.quien;
+      li.append(quien, document.createTextNode(` ${p.texto}`));
+      if (p.inferido) {
+        const n = document.createElement('span');
+        n.className = 'nota-lane';
+        n.textContent = ` El md no indica responsable; en el diagrama se ubica en el carril ${p.carril}.`;
+        li.append(n);
+      }
+      ol.append(li);
+    });
+  }
+
+  async function dibujar(idDiagrama, codigo) {
+    const nodo = document.getElementById(idDiagrama);
+    nodo.textContent = codigo;
+    await mermaid.run({ nodes: [nodo], suppressErrors: false });
+    if (/Syntax error/i.test(nodo.textContent) || !nodo.querySelector('svg')) {
+      throw new Error(`Mermaid no pudo dibujar ${idDiagrama}`);
+    }
+  }
+
+  async function renderProceso(md) {
+    const s = secciones(md);
+    const actual = pasos(s('Proceso actual').lineas);
+    const propuesto = pasos(s('Proceso propuesto').lineas);
+    const errores = actual.lista.filter((p) => p.etiqueta && /^ERROR/i.test(p.etiqueta));
+    const raiz = errores.find((p) => /CAUSA/i.test(p.etiqueta));
+    const mejoras = propuesto.lista.filter((p) => p.etiqueta && /^Mejora/i.test(p.etiqueta));
+
+    document.getElementById('proceso-actual-intro').textContent =
+      `${actual.lista.length} pasos, ${errores.length} con punto de error (en rojo, con la etiqueta en el texto)` +
+      (raiz ? `; la causa raíz es el paso ${raiz.n}, de ${raiz.quien}.` : '.');
+    document.getElementById('proceso-propuesto-intro').textContent =
+      `${propuesto.lista.length} pasos, ${mejoras.length} de ellos marcados como mejora (en azul, con su número); ` +
+      `las mejoras se numeran por orden de implementación, no por orden en el proceso.`;
+    listaPasos(document.getElementById('pasos-actual'), actual.lista);
+    listaPasos(document.getElementById('pasos-propuesto'), propuesto.lista);
+    document.getElementById('proceso-actual-nota').textContent = actual.notas.join(' ');
+    document.getElementById('proceso-propuesto-nota').textContent = propuesto.notas.join(' ');
+
+    document.querySelector('[data-seccion="proceso"]').hidden = true;
+    document.getElementById('proceso-contenido').hidden = false;
+    if (!window.mermaid) throw new Error('Mermaid no se cargó (¿sin conexión al CDN?)');
+    await dibujar('diagrama-actual', aMermaid('a', actual.lista));
+    await dibujar('diagrama-propuesto', aMermaid('p', propuesto.lista));
+  }
+
+  function renderMejoras(md) {
+    const s = secciones(md);
+    const filas = s('Tabla de mejoras').lineas
+      .filter((l) => l.trim().startsWith('|'))
+      .map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()));
+    const [cabecera, , ...cuerpo] = filas; // la segunda fila es el separador |---|
+    if (!cabecera || !cuerpo.length) throw new Error('parte2.md no tiene la tabla de mejoras');
+
+    const trHead = document.createElement('tr');
+    cabecera.forEach((c, i) => {
+      const th = document.createElement('th');
+      th.className = 'izq';
+      th.scope = 'col';
+      th.textContent = c;
+      trHead.append(th);
+    });
+    document.querySelector('#tabla-mejoras thead').append(trHead);
+
+    const tbody = document.querySelector('#tabla-mejoras tbody');
+    cuerpo.forEach((fila, i) => {
+      const tr = document.createElement('tr');
+      if (i % 2 === 1) tr.className = 'par';
+      fila.forEach((c, j) => {
+        const td = document.createElement('td');
+        td.className = j === 0 ? 'num' : 'texto';
+        td.textContent = c;
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+
+    const r = s('Restricciones');
+    document.getElementById('restricciones-titulo').textContent = r.titulo;
+    document.getElementById('restricciones-intro').textContent =
+      r.lineas.filter((l) => l.trim() && !l.trim().startsWith('-')).join(' ');
+    const ul = document.getElementById('restricciones-lista');
+    r.lineas.filter((l) => /^\s*-\s+/.test(l)).forEach((l) => {
+      const li = document.createElement('li');
+      inline(li, l.replace(/^\s*-\s+/, ''));
+      ul.append(li);
+    });
+
+    document.querySelector('[data-seccion="mejoras"]').hidden = true;
+    document.getElementById('mejoras-contenido').hidden = false;
+  }
+
+  function fallo(seccion, error) {
+    const caja = document.querySelector(`[data-seccion="${seccion}"]`);
+    caja.hidden = false;
+    caja.className = 'placeholder error';
+    caja.innerHTML = describirError(error);
+    console.error(`[${seccion}]`, error);
+  }
+
+  cargarDatos('parte2').then(async (md) => {
+    try { renderMejoras(md); } catch (e) { fallo('mejoras', e); }
+    try { await renderProceso(md); } catch (e) { fallo('proceso', e); }
+  }).catch((e) => { fallo('proceso', e); fallo('mejoras', e); });
+})();
 </script>
 
 <script>

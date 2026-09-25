@@ -13,11 +13,12 @@ y "Mejoras priorizadas" del sitio.
    nombre de equipo, fechas en dos formatos, un partido duplicado (P061) y un marcador
    capturado en un partido suspendido (P042).
 4. **[ERROR - CAUSA RAÍZ] Comisión** revisa tarjetas una vez por semana, en un día fijo —
-   cuando hay una jornada entre semana (miércoles), la sesión no alcanza a resolver antes
-   del siguiente partido del equipo. Esto puede pasar de dos formas: (a) el partido a
-   impedir cae el mismo día de la sesión, o (b) la tarjeta se genera en un partido de
-   miércoles y para cuando la Comisión sesiona la semana siguiente, el equipo ya jugó el
-   sábado de en medio. Es la causa del 73.7% de sanciones incumplidas a tiempo.
+   hay dos causas distintas de incumplimiento. (a) Rojas directas (4 de 8 incumplidas): la
+   sesión fija no cubre las jornadas entre semana (miércoles), así que la sanción llega
+   después del siguiente partido del equipo. (b) Dobles amarillas y acumulación de
+   amarillas (10 de las 14 sanciones incumplidas): NUNCA llegan a la hoja Sanciones, así
+   que no hay control alguno sobre ellas, independientemente de cuándo sesione la
+   Comisión. La causa (b) es la mayor.
 5. **Coordinador** notifica sanciones por WhatsApp, sin control de si llegó a tiempo.
 6. **[ERROR] Coordinador** actualiza tabla y goleo, y publica en redes sociales sin
    conciliar contra los datos — de ahí la tabla publicada con errores.
@@ -32,12 +33,14 @@ Se repite cada semana.
    el cuello de botella.
 3. **[Mejora 3] Coordinador** captura en una Google Sheet con listas desplegables de equipo
    y formato de fecha fijo, y aviso si un id de partido se repite. Depende de la Mejora 1.
-4. **[Mejora 2] Coordinador**: si hay roja o expulsión, notifica ese mismo día a los
-   delegados de los dos equipos, sin esperar a la sesión semanal. Ataca directamente la
-   causa raíz del punto 4 del proceso actual.
+4. **[Mejora 2] Coordinador**: ante CUALQUIER evento que genera suspensión (roja directa,
+   doble amarilla, o al alcanzar 5 amarillas acumuladas, detectado por conteo simple en la
+   Google Sheet de la Mejora 3), notifica ese mismo día a los delegados de los dos
+   equipos, sin esperar a la sesión semanal. Ataca las dos causas del punto 4 del proceso
+   actual: el cuello de botella semanal de las rojas, y la ausencia total de control de
+   doble amarilla y acumulación.
 5. **Comisión** sesiona semanalmente (sin cambio en frecuencia), pero ahora solo para
-   revisar acumulación de amarillas y casos dudosos, no como único filtro para rojas
-   directas.
+   revisar casos dudosos, no como único filtro para rojas directas.
 6. **[Mejora 5] Checklist de elegibilidad automática**: cruza la alineación de cada partido
    contra los suspendidos vigentes antes de darla por válida. Depende de que las Mejoras 1
    a 3 ya funcionen.
@@ -51,7 +54,7 @@ Se repite cada semana.
 | # | Mejora | Problema que resuelve | Esfuerzo | Impacto | Riesgo | Indicador | Meta |
 |---|---|---|---|---|---|---|---|
 | 1 | Captura inmediata por foto | Delegado único, entrega hasta el lunes | Bajo | Alto (habilita todo lo demás) | Bajo: fotos borrosas, mitigar con prueba previa | Días entre partido y captura | De hasta 5 días a máximo 1 |
-| 2 | Notificar por evento, no por calendario | Causa raíz: sesión fija no cubre jornada entre semana | Bajo | Alto | Depende de revisión el mismo día con las ~10h/semana del coordinador | % de suspensiones notificadas antes del partido a impedir | De 26.3% a 100% |
+| 2 | Notificar por evento, no por calendario | Causa mayor: dobles amarillas y acumulación nunca llegan a Sanciones; causa menor: sesión fija no cubre jornada entre semana para las rojas | Bajo | Alto | Depende de revisión el mismo día con las ~10h/semana del coordinador | % de suspensiones notificadas antes del partido a impedir | De 21.1% (4 de 19) a 100% |
 | 3 | Captura con validación (Google Sheet) | Errores de nombres, fechas, duplicados | Medio | Alto | Resistencia del coordinador voluntario a cambiar de herramienta | Hallazgos de calidad de datos por jornada | De >1 por partido a 0 |
 | 4 | Conciliación automática antes de publicar | Tabla publicada con errores (queja 1) | Bajo | Medio-alto | Ninguno relevante | Diferencias tabla publicada vs recalculada | De 5/12 equipos con error a 0 |
 | 5 | Checklist de elegibilidad antes de alinear | Alineación indebida (queja 2, 15 casos en 14 partidos) | Medio-alto, depende de mejoras 1-3 | Alto | Falsos negativos si la mejora 2 no se cumple | Casos de alineación indebida por temporada | De 15 a 0 |
