@@ -25,6 +25,9 @@
   --correcto: #15803d;
   --aviso-bg: #fff8e8;
   --aviso-texto: #7a5a12;
+  /* Ámbar de advertencia para marcas gráficas (anillos del resumen): ≥ 4.5:1
+     sobre --bg-sutil. Ningún ámbar único cumple en claro y en oscuro a la vez. */
+  --advertencia: #955f00;
 
   /* Paleta categórica de gráficas (dataviz skill, palette.md): primeros 3
      slots del categórico de referencia, los únicos 3 validados "all-pairs"
@@ -51,6 +54,7 @@
     --correcto: #5cd48a;
     --aviso-bg: #2a2413;
     --aviso-texto: #e0c481;
+    --advertencia: #fab219;
 
     --serie-1: #3987e5;
     --serie-2: #d95926;
@@ -309,10 +313,17 @@ ul.restricciones li { margin-bottom: .35rem; }
 
 /* ---------- Resumen ejecutivo: tarjetas de KPI ---------- */
 .kpi-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
-.tarjeta-kpi { background: var(--bg-sutil); border-radius: 10px; padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .35rem; }
-.tarjeta-kpi .etiqueta-escenario { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--acento); font-weight: 600; }
-.tarjeta-kpi .kpi-detalle { font-size: .85rem; color: var(--texto-suave); }
-.tarjeta-kpi .kpi-detalle.chico { font-size: .78rem; }
+.tarjeta-kpi { background: var(--bg-sutil); border-radius: 10px; padding: 1.1rem 1.25rem; display: flex; flex-direction: column; align-items: center; gap: .4rem; text-align: center; }
+.tarjeta-kpi .tarjeta-sev { display: flex; align-items: center; gap: .4rem; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-suave); font-weight: 600; }
+.tarjeta-kpi .tarjeta-sev .punto { width: .55rem; height: .55rem; border-radius: 50%; }
+/* El medidor: contenedor de tamaño fijo (Chart.js dimensiona el canvas al contenedor). */
+.tarjeta-kpi .gauge { position: relative; width: 136px; height: 136px; margin: .35rem 0; }
+.tarjeta-kpi .gauge-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.tarjeta-kpi .gauge-num { font-size: 1.85rem; font-weight: 700; line-height: 1.05; }
+.tarjeta-kpi .gauge-sub { font-size: .72rem; color: var(--texto-suave); margin-top: .1rem; }
+.tarjeta-kpi .kpi-etiqueta { font-size: .95rem; font-weight: 600; color: var(--texto); margin: 0; }
+.tarjeta-kpi .tarjeta-detalle { display: flex; flex-direction: column; gap: .3rem; }
+.tarjeta-kpi .kpi-detalle { font-size: .8rem; color: var(--texto-suave); }
 .tarjeta-kpi .enlace-tarjeta { margin-top: auto; padding-top: .6rem; color: var(--acento); font-weight: 600; font-size: .88rem; text-decoration: none; }
 .tarjeta-kpi .enlace-tarjeta:hover, .enlaces-rapidos a:hover { text-decoration: underline; }
 .historia { max-width: 90ch; }
@@ -1139,73 +1150,160 @@ cargarDatos('meta')
     return e;
   }
 
-  function tarjeta({ valor, etiqueta, detalles = [], enlace, escenario }) {
+  // Severidad de cada medidor. Los colores salen de los tokens del tema (claro u
+  // oscuro), elegidos para pasar 4.5:1 sobre el fondo de la tarjeta en ambos. La
+  // severidad va siempre con su palabra: el color nunca es el único canal.
+  const SEVERIDAD = {
+    advertencia: { token: '--advertencia', texto: 'Advertencia' },
+    critico: { token: '--error', texto: 'Crítico' },
+    info: { token: '--acento', texto: 'Informativo' },
+  };
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  // La pista del medidor es el mismo color, más claro (20% de opacidad).
+  const conAlfa = (hex, a) => (/^#[0-9a-f]{6}$/i.test(hex)
+    ? hex + Math.round(a * 255).toString(16).padStart(2, '0') : hex);
+
+  // Una tarjeta = un medidor circular (doughnut de vuelta completa) con el número
+  // al centro, la etiqueta debajo, un texto de contexto y el enlace. Las cuatro
+  // usan este mismo componente: mismo tamaño, grosor de anillo y tipografía.
+  function medidor({ severidad, etiqueta, enlace }) {
+    const sev = SEVERIDAD[severidad];
+    const color = cssVar(sev.token);
     const t = el('article', 'tarjeta-kpi');
-    if (escenario) t.append(el('div', 'etiqueta-escenario', `Escenario: ${escenario}`));
-    t.append(el('div', 'kpi-valor', valor), el('div', 'kpi-etiqueta', etiqueta));
-    detalles.forEach(({ texto, chico }) => t.append(el('div', chico ? 'kpi-detalle chico' : 'kpi-detalle', texto)));
+
+    const tag = el('div', 'tarjeta-sev');
+    const punto = el('span', 'punto');
+    punto.style.background = color;
+    punto.setAttribute('aria-hidden', 'true');
+    tag.append(punto, document.createTextNode(sev.texto));
+
+    const caja = el('div', 'gauge');
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('role', 'img');
+    const centro = el('div', 'gauge-centro');
+    const num = el('div', 'gauge-num');
+    const sub = el('div', 'gauge-sub');
+    centro.append(num, sub);
+    caja.append(canvas, centro);
+
+    const detalle = el('div', 'tarjeta-detalle');
     const a = el('a', 'enlace-tarjeta', `${enlace[1]} →`);
     a.href = enlace[0];
-    t.append(a);
-    return t;
+    t.append(tag, caja, el('div', 'kpi-etiqueta', etiqueta), detalle, a);
+
+    let textos = ['', ''];
+    let primera = true;
+    const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const grafica = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['', ''],
+        datasets: [{
+          data: [0, 1],
+          backgroundColor: [color, conAlfa(color, 0.2)],
+          borderColor: cssVar('--bg-sutil'), // 2px de superficie entre relleno y pista
+          borderWidth: 2,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        cutout: '78%',
+        // Sin animación al crear: Chart.js aplaza el redimensionado mientras una
+        // animación corre, y con la pestaña oculta esa animación no avanza y el
+        // anillo queda sin dibujar. Solo se anima el cambio de escenario.
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          // etiquetaDirecta (sección 4) está registrado de forma global; aquí no aplica.
+          etiquetaDirecta: false,
+          tooltip: { callbacks: { title: () => '', label: (c) => textos[c.dataIndex] } },
+        },
+      },
+    });
+
+    return {
+      el: t,
+      actualizar({ lleno, total, numero, sub: subtexto, textos: tx, detalles, aria }) {
+        textos = tx;
+        grafica.data.datasets[0].data = [lleno, Math.max(total - lleno, 0)];
+        grafica.options.animation = primera || sinMovimiento ? false : { duration: 500 };
+        primera = false;
+        grafica.update();
+        num.textContent = numero;
+        sub.textContent = subtexto;
+        canvas.setAttribute('aria-label', aria);
+        detalle.replaceChildren(...detalles.map((d) => el('div', 'kpi-detalle', d)));
+      },
+    };
   }
 
-  function tarjetaTabla(standings, escenario) {
+  function datosTabla(standings, escenario) {
     const c = compararTabla(standings, escenario);
-    const detalles = [
-      {
-        texto: c.liderPub !== c.liderEsc
+    return {
+      lleno: c.distintos, total: c.total, numero: c.distintos, sub: `de ${c.total} equipos`,
+      textos: [`${c.distintos} equipos con cifras distintas a las publicadas`, `${c.total - c.distintos} sin diferencias`],
+      aria: `${c.distintos} de ${c.total} equipos con cifras distintas a la tabla publicada, escenario ${ESCENARIOS_TABLA[escenario].etiqueta}`,
+      detalles: [
+        `Escenario: ${ESCENARIOS_TABLA[escenario].etiqueta}.`,
+        c.liderPub !== c.liderEsc
           ? `El líder cambia: ${c.liderPub} (publicada) → ${c.liderEsc}.`
           : `El líder no cambia: ${c.liderEsc}.`,
-      },
-      {
-        texto: c.entran.length || c.salen.length
+        c.entran.length || c.salen.length
           ? `Liguilla: entra${c.entran.length > 1 ? 'n' : ''} ${lista(c.entran) || 'nadie'}; sale${c.salen.length > 1 ? 'n' : ''} ${lista(c.salen) || 'nadie'}.`
           : 'Liguilla: sin cambios frente a la publicada.',
-      },
-      { texto: 'Cuenta los equipos con PJ, G, E, P, GF, GC, DG o Pts distintos a los publicados.', chico: true },
-    ];
-    return tarjeta({
-      valor: `${c.distintos} de ${c.total}`,
-      etiqueta: 'equipos con cifras distintas a la tabla publicada',
-      detalles, enlace: ['#posiciones', 'Ver tabla completa'],
-      escenario: ESCENARIOS_TABLA[escenario].etiqueta,
-    });
+      ],
+    };
   }
 
-  function tarjetasFijas(disciplina, goleo) {
+  function medidoresFijos(disciplina, goleo) {
     const s = disciplina.summary;
     const errores = goleo.comparacion.filter((c) => c.tipo !== 'coincide').length;
+    const filasPub = goleo.publicado.length;
     const pub = goleo.publicado[0], real = goleo.correcto[0];
-    return [
-      tarjeta({
-        valor: `${s.pct_no_cumplidas.toFixed(1)}%`,
-        etiqueta: 'de las suspensiones no se cumplió',
-        detalles: [
-          { texto: `${s.no_cumplidas} de ${s.triggers_total} eventos que generan suspensión.` },
-          { texto: `Rojas directas: ${s.rojas_no_cumplidas} de ${s.rojas_total} incumplidas.` },
-        ],
-        enlace: ['#disciplina', 'Ver la línea de tiempo'],
-      }),
-      tarjeta({
-        valor: s.casos_alineacion_indebida,
-        etiqueta: 'casos de alineación indebida',
-        detalles: [
-          { texto: `En ${s.partidos_afectados} de ${s.partidos_jugados} partidos jugados (${s.pct_partidos_afectados.toFixed(1)}%).` },
-          { texto: 'Cada caso se sanciona de oficio con el art. 32.' },
-        ],
-        enlace: ['#disciplina', 'Ver los partidos'],
-      }),
-      tarjeta({
-        valor: errores,
-        etiqueta: 'errores en el goleo publicado',
-        detalles: [
-          { texto: `La lista publicada coronaba a ${pub.Jugador} (${pub.Equipo}) con ${pub.Goles}.` },
-          { texto: `El goleador correcto es ${real.nombre} (${real.equipo}) con ${real.goles}.` },
-        ],
-        enlace: ['#goleo', 'Ver el goleo'],
-      }),
-    ];
+
+    const incumplidas = medidor({
+      severidad: 'critico', etiqueta: 'Suspensiones incumplidas', enlace: ['#disciplina', 'Ver la línea de tiempo'],
+    });
+    incumplidas.actualizar({
+      lleno: s.pct_no_cumplidas, total: 100, numero: `${s.pct_no_cumplidas.toFixed(1)}%`,
+      sub: `${s.no_cumplidas} de ${s.triggers_total}`,
+      textos: [`${s.no_cumplidas} de ${s.triggers_total} suspensiones incumplidas`, `${s.cumplidas_a_tiempo} cumplidas a tiempo`],
+      aria: `${s.pct_no_cumplidas.toFixed(1)}% de las suspensiones no se cumplió: ${s.no_cumplidas} de ${s.triggers_total}`,
+      detalles: [
+        `${s.no_cumplidas} de ${s.triggers_total} eventos que generan suspensión.`,
+        `Rojas directas: ${s.rojas_no_cumplidas} de ${s.rojas_total} incumplidas.`,
+      ],
+    });
+
+    const alineacion = medidor({
+      severidad: 'advertencia', etiqueta: 'Alineación indebida', enlace: ['#disciplina', 'Ver los partidos'],
+    });
+    // Se mide en partidos afectados (no casos/partidos, que podría pasar de 100%):
+    // el anillo, el número y el texto usan la misma cifra.
+    alineacion.actualizar({
+      lleno: s.partidos_afectados, total: s.partidos_jugados,
+      numero: s.partidos_afectados, sub: `de ${s.partidos_jugados} partidos`,
+      textos: [`${s.partidos_afectados} partidos con alineación indebida`, `${s.partidos_jugados - s.partidos_afectados} partidos sin casos`],
+      aria: `${s.partidos_afectados} de ${s.partidos_jugados} partidos con alineación indebida (${s.pct_partidos_afectados.toFixed(1)}%)`,
+      detalles: [
+        `${s.partidos_afectados} de ${s.partidos_jugados} partidos (${s.pct_partidos_afectados.toFixed(1)}%) con al menos un caso; ${s.casos_alineacion_indebida} casos en total.`,
+        'Se sanciona de oficio con el art. 32.',
+      ],
+    });
+
+    const goleoM = medidor({
+      severidad: 'info', etiqueta: 'Errores en el goleo', enlace: ['#goleo', 'Ver el goleo'],
+    });
+    goleoM.actualizar({
+      lleno: errores, total: filasPub, numero: errores, sub: `de ${filasPub} filas`,
+      textos: [`${errores} filas con error`, `${filasPub - errores} filas sin error`],
+      aria: `${errores} errores en las ${filasPub} filas del goleo publicado`,
+      detalles: [
+        `La lista publicada coronaba a ${pub.Jugador} (${pub.Equipo}) con ${pub.Goles}.`,
+        `El goleador correcto es ${real.nombre} (${real.equipo}) con ${real.goles}.`,
+      ],
+    });
+    return [incumplidas, alineacion, goleoM];
   }
 
   // Todo número del párrafo sale de los datos; siempre usa el escenario oficial.
@@ -1242,19 +1340,26 @@ cargarDatos('meta')
   }
 
   function render([standings, scorers, disciplina, hallazgos, md]) {
+    // La página está oculta hasta que el contenido esté armado; se muestra antes de
+    // crear los medidores para que Chart.js mida un contenedor con tamaño real.
+    document.querySelector('[data-seccion="resumen"]').hidden = true;
+    document.getElementById('resumen-contenido').hidden = false;
+
     const cont = document.getElementById('resumen-tarjetas');
-    const tablaTarjeta = el('div');
-    tablaTarjeta.setAttribute('aria-live', 'polite');
-    tablaTarjeta.style.display = 'contents';
-    cont.append(tablaTarjeta, ...tarjetasFijas(disciplina, scorers));
+    const tabla = medidor({
+      severidad: 'advertencia', etiqueta: 'Equipos con error', enlace: ['#posiciones', 'Ver tabla completa'],
+    });
+    tabla.el.setAttribute('aria-live', 'polite');
+    cont.append(tabla.el, ...medidoresFijos(disciplina, scorers).map((m) => m.el));
 
     function elegir(escenario) {
-      tablaTarjeta.replaceChildren(tarjetaTabla(standings, escenario));
+      tabla.actualizar(datosTabla(standings, escenario));
       document.querySelectorAll('#selector-escenario-resumen button').forEach((b) =>
         b.setAttribute('aria-pressed', String(b.dataset.escenario === escenario)));
       document.getElementById('nota-escenario-resumen').textContent =
-        `${ESCENARIOS_TABLA[escenario].descripcion} El selector solo cambia la primera tarjeta: ` +
-        'las demás no dependen del escenario.';
+        `${ESCENARIOS_TABLA[escenario].descripcion} El selector solo cambia el primer medidor: ` +
+        'los demás no dependen del escenario. Un equipo cuenta como "con error" si alguna de sus ' +
+        'cifras (PJ, G, E, P, GF, GC, DG o Pts) difiere de la tabla publicada.';
     }
     document.getElementById('selector-escenario-resumen').addEventListener('click', (ev) => {
       const b = ev.target.closest('button[data-escenario]');
@@ -1272,9 +1377,6 @@ cargarDatos('meta')
       a.href = href;
       nav.append(a);
     });
-
-    document.querySelector('[data-seccion="resumen"]').hidden = true;
-    document.getElementById('resumen-contenido').hidden = false;
   }
 
   Promise.all([
