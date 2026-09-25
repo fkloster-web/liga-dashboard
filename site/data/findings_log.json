@@ -728,9 +728,9 @@
   {
     "rule_id": "R12",
     "sheet": "Sanciones",
-    "record_id": "Raúl Reyes Chávez@2026-09-02 00:00:00",
+    "record_id": "Raúl Reyes Chávez@2026-09-02",
     "field": "fecha_sesion",
-    "original_value": "2026-09-02 00:00:00",
+    "original_value": "2026-09-02",
     "corrected_value": null,
     "action": "flagged",
     "severity": "info",
@@ -926,7 +926,7 @@
   {
     "rule_id": "GOLEO_PUBLICADO",
     "sheet": "Goleo_publicado",
-    "record_id": "Iván Cruz García (nan)",
+    "record_id": "Iván Cruz García (Leones de Tonalá)",
     "field": "Goles",
     "original_value": "0",
     "corrected_value": "3",

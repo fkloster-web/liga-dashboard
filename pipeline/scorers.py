@@ -134,10 +134,14 @@ def compare_vs_published(
 
     df = pd.DataFrame(filas)
     if findings is not None:
+        equipo_real = scorers_correct.set_index("id_jugador")["equipo"]
         for r in df[df["tipo"] != "coincide"].itertuples():
+            # Un omitido no tiene equipo publicado (pandas lo vuelve NaN, que es
+            # truthy): se usa el equipo real del jugador, buscado por id_jugador.
+            equipo = r.equipo_publicado if pd.notna(r.equipo_publicado) else equipo_real.get(r.id_jugador)
             findings.add(Finding(
                 rule_id="GOLEO_PUBLICADO", sheet="Goleo_publicado",
-                record_id=f"{r.jugador} ({r.equipo_publicado or 'no listado'})",
+                record_id=f"{r.jugador} ({equipo})" if equipo else r.jugador,
                 field="Goles",
                 original_value=str(r.goles_publicado),
                 corrected_value=str(r.goles_correcto),

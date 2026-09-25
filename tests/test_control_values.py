@@ -791,6 +791,22 @@ class TestPipelineCompleto:
         assert_close(int((resultado.findings["rule_id"] == "ART32").sum()), 15,
                      label="hallazgos de art. 32")
 
+    def test_log_sin_nan_ni_horas_en_fechas(self, resultado):
+        """Regresión: el omitido del goleo salía como '(nan)' y R12 mostraba la
+        fecha con hora ('2026-09-02 00:00:00')."""
+        f = resultado.findings
+        for columna in ("record_id", "original_value", "corrected_value", "note"):
+            valores = f[columna].dropna().astype(str)
+            assert not valores.str.contains(r"\bnan\b", case=False).any(), \
+                f"'nan' en la columna {columna} del log de hallazgos"
+            assert not valores.str.contains(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}").any(), \
+                f"fecha con hora en la columna {columna} del log de hallazgos"
+        omitido = f[(f["rule_id"] == "GOLEO_PUBLICADO") & f["record_id"].str.startswith("Iván Cruz García")]
+        assert list(omitido["record_id"]) == ["Iván Cruz García (Leones de Tonalá)"]
+        r12 = f[f["rule_id"] == "R12"].iloc[0]
+        assert r12["original_value"] == "2026-09-02"
+        assert r12["record_id"] == "Raúl Reyes Chávez@2026-09-02"
+
     def test_timeline_muestra_notificaciones_tardias(self, resultado):
         """Las 4 rojas incumplidas son las notificadas DESPUÉS del partido que
         debían impedir: es la evidencia del cuello de botella del proceso."""

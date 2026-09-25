@@ -372,9 +372,11 @@ def r12_flag_post_cutoff(
     is_post_cutoff = pd.to_datetime(sanctions["fecha_sesion"]) > cutoff
     for idx in sanctions.index[is_post_cutoff]:
         row = sanctions.loc[idx]
+        # Solo la fecha (aaaa-mm-dd), como el resto de las fechas del proyecto.
+        fecha = pd.Timestamp(row["fecha_sesion"]).strftime("%Y-%m-%d")
         findings.add(Finding(
-            rule_id="R12", sheet="Sanciones", record_id=f"{row['jugador']}@{row['fecha_sesion']}",
-            field="fecha_sesion", original_value=str(row["fecha_sesion"]), corrected_value=None,
+            rule_id="R12", sheet="Sanciones", record_id=f"{row['jugador']}@{fecha}",
+            field="fecha_sesion", original_value=fecha, corrected_value=None,
             action="flagged", severity="info",
             note="Registro posterior al corte de datos (cutoff_date); se conserva pero se marca.",
         ))
