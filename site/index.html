@@ -25,6 +25,15 @@
   --correcto: #15803d;
   --aviso-bg: #fff8e8;
   --aviso-texto: #7a5a12;
+
+  /* Paleta categórica de gráficas (dataviz skill, palette.md): primeros 3
+     slots del categórico de referencia, los únicos 3 validados "all-pairs"
+     en ambos modos. Nunca reutilizar --error/--correcto aquí: son colores
+     de estado reservados, no de identidad de serie. */
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+  --serie-neutral: #9aa4ae;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,6 +51,11 @@
     --correcto: #5cd48a;
     --aviso-bg: #2a2413;
     --aviso-texto: #e0c481;
+
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --serie-3: #199e70;
+    --serie-neutral: #6b7480;
   }
 }
 
@@ -254,6 +268,42 @@ details.detalle-tabla summary {
 }
 details.detalle-tabla summary:hover { text-decoration: underline; }
 details.detalle-tabla .tabla-scroll { margin-top: 1rem; }
+
+/* ---------- KPIs (números grandes) ---------- */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, max-content));
+  gap: 1.5rem 2.5rem;
+  margin: 0 0 1.5rem;
+}
+.kpi-valor {
+  /* Anti-patrón: tabular-nums en un número grande lo hace ver suelto.
+     Cifras proporcionales aquí; tabular-nums se reserva para tablas. */
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.kpi-etiqueta { color: var(--texto-suave); font-size: .85rem; margin-top: .2rem; }
+
+.grafica-envoltura { margin: 0 0 1.25rem; }
+.grafica-envoltura canvas { max-width: 100%; }
+
+/* Cita textual de la interpretación redactada por el pipeline (nunca reescrita). */
+.cita-pipeline {
+  background: var(--acento-suave);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  max-width: 78ch;
+  font-style: italic;
+}
+.cita-pipeline .atribucion {
+  display: block;
+  margin-top: .5rem;
+  font-style: normal;
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
 
 /* ---------- Pie ---------- */
 footer {
@@ -509,6 +559,35 @@ footer {
     <h2 id="estadisticas-titulo">4. Estadísticas del torneo</h2>
     <p class="descripcion">Goles, resultados y tarjetas, con la prueba estadística sobre los árbitros.</p>
     <div class="placeholder" data-seccion="estadisticas">Cargando datos…</div>
+    <div id="estadisticas-contenido" hidden>
+
+      <h3>Goles</h3>
+      <div class="kpis">
+        <div><div class="kpi-valor" id="kpi-goles"></div><div class="kpi-etiqueta">goles en el torneo</div></div>
+        <div><div class="kpi-valor" id="kpi-goles-partido"></div><div class="kpi-etiqueta">goles por partido</div></div>
+      </div>
+      <div class="grafica-envoltura">
+        <canvas id="grafica-resultados" height="110" role="img" aria-label="Reparto de resultados por partido: local, empate y visitante"></canvas>
+      </div>
+      <div class="aviso" id="aviso-localia"></div>
+
+      <div class="bloque">
+        <h3>Tarjetas</h3>
+        <div class="kpis">
+          <div><div class="kpi-valor" id="kpi-tarjetas"></div><div class="kpi-etiqueta">tarjetas en el torneo</div></div>
+          <div><div class="kpi-valor" id="kpi-tarjetas-partido"></div><div class="kpi-etiqueta">tarjetas por partido</div></div>
+        </div>
+        <p class="descripcion">Tarjetas por partido de cada árbitro, con el intervalo de confianza del 95% (barra clara) sobre el promedio (punto).</p>
+        <div class="grafica-envoltura">
+          <canvas id="grafica-arbitros" height="220" role="img" aria-label="Tarjetas por partido de cada árbitro, con intervalo de confianza del 95%"></canvas>
+        </div>
+
+        <p id="parrafo-significancia"></p>
+        <div class="cita-pipeline" id="cita-interpretacion"></div>
+        <p class="descripcion" id="nota-post-r08"></p>
+      </div>
+
+    </div>
   </section>
 
   <section id="disciplina" aria-labelledby="disciplina-titulo">
@@ -1081,9 +1160,184 @@ registrarSeccion('resumen', ['standings', 'scorers', 'discipline'], (tablas, gol
 </script>
 
 <script>
-registrarSeccion('estadisticas', ['stats'], (est) =>
-  `${est.general.goles} goles en ${est.general.partidos} partidos y ` +
-  `${est.referees.length} árbitros con su prueba de significancia.`);
+(function seccionEstadisticas() {
+  const CSS = getComputedStyle(document.documentElement);
+  const color = (nombre) => CSS.getPropertyValue(nombre).trim();
+
+  // Plugin propio de etiquetas directas (sin librería adicional): dibuja un
+  // texto junto al extremo de cada barra. Necesario porque el reparto de
+  // resultados tiene un color (aqua) que queda por debajo de 3:1 de contraste
+  // en tema claro (dataviz skill, palette.md) — la "relief rule" exige una
+  // etiqueta visible, no solo el tooltip.
+  const etiquetaDirecta = {
+    id: 'etiquetaDirecta',
+    afterDatasetsDraw(chart, _args, opts) {
+      const { ctx } = chart;
+      const datasetIndex = opts.datasetIndex ?? 0;
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if (!meta || meta.hidden) return;
+      ctx.save();
+      ctx.fillStyle = opts.color || color('--texto');
+      ctx.font = `600 12px ${color('--fuente')}`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      meta.data.forEach((elem, i) => {
+        const texto = opts.texto(i);
+        if (texto == null) return;
+        ctx.fillText(texto, elem.x + 8, elem.y);
+      });
+      ctx.restore();
+    },
+  };
+  Chart.register(etiquetaDirecta);
+
+  function render(stats) {
+    const g = stats.general;
+    document.getElementById('kpi-goles').textContent = g.goles;
+    document.getElementById('kpi-goles-partido').textContent = g.goles_por_partido.toFixed(2);
+    document.getElementById('kpi-tarjetas').textContent = stats.cards.total_crudas;
+    document.getElementById('kpi-tarjetas-partido').textContent = stats.cards.por_partido_crudas.toFixed(2);
+
+    // --- Gráfica 1: reparto de resultados (barras, no dona: valores cercanos) ---
+    const resultados = [
+      { etiqueta: 'Local', ...g.resultados.local },
+      { etiqueta: 'Empate', ...g.resultados.empate },
+      { etiqueta: 'Visitante', ...g.resultados.visitante },
+    ];
+    new Chart(document.getElementById('grafica-resultados'), {
+      type: 'bar',
+      data: {
+        labels: resultados.map((r) => r.etiqueta),
+        datasets: [{
+          data: resultados.map((r) => r.partidos),
+          backgroundColor: [color('--serie-1'), color('--serie-2'), color('--serie-3')],
+          borderRadius: 4,
+          barPercentage: 0.6,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        layout: { padding: { right: 70 } },
+        scales: {
+          x: { beginAtZero: true, max: stats.general.partidos, grid: { color: color('--borde') } },
+          y: { grid: { display: false } },
+        },
+        plugins: {
+          legend: { display: false }, // 1 sola serie, identidad ya está en el eje
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${ctx.raw} partidos (${resultados[ctx.dataIndex].pct.toFixed(1)}%)`,
+            },
+          },
+          etiquetaDirecta: {
+            texto: (i) => `${resultados[i].partidos} partidos · ${resultados[i].pct.toFixed(1)}%`,
+          },
+        },
+      },
+      plugins: [etiquetaDirecta],
+    });
+
+    // --- Aviso: desbalance de localía ---
+    const chapalita = stats.home_away.find((e) => e.equipo === 'Real Chapalita');
+    const tlaquepaque = stats.home_away.find((e) => e.equipo === 'Atlético Tlaquepaque');
+    document.getElementById('aviso-localia').textContent =
+      `El calendario no repartió la localía al azar: ${chapalita.equipo} jugó de local ` +
+      `${chapalita.como_local} de ${chapalita.partidos} partidos, mientras que ` +
+      `${tlaquepaque.equipo} no jugó de local ninguno (${tlaquepaque.como_local} de ` +
+      `${tlaquepaque.partidos}). Con ese desbalance, el % de resultados por localía no ` +
+      `permite concluir que exista ventaja de jugar en casa.`;
+
+    // --- Gráfica 2: tarjetas por partido por árbitro, con IC95 ---
+    // Un solo color para las 5 barras, en el orden alfabético del JSON (nunca
+    // por cantidad de tarjetas): es la regla del skill para una serie nominal
+    // sin orden natural, y coincide con no destacar a ningún árbitro.
+    const refs = stats.referees;
+    const EPS = 0.035; // medio ancho del marcador de promedio (línea fina)
+    new Chart(document.getElementById('grafica-arbitros'), {
+      type: 'bar',
+      data: {
+        labels: refs.map((r) => r.arbitro),
+        datasets: [
+          {
+            label: 'Intervalo de confianza 95%',
+            data: refs.map((r) => [r.ic95_bajo, r.ic95_alto]),
+            backgroundColor: color('--serie-neutral') + '55',
+            borderRadius: 3,
+            barPercentage: 0.5,
+          },
+          {
+            label: 'Promedio',
+            data: refs.map((r) => [r.por_partido - EPS, r.por_partido + EPS]),
+            backgroundColor: color('--serie-1'),
+            barPercentage: 0.5,
+          },
+        ],
+      },
+      options: {
+        indexAxis: 'y',
+        layout: { padding: { right: 60 } },
+        scales: {
+          x: { beginAtZero: true, grid: { color: color('--borde') }, title: { display: true, text: 'Tarjetas por partido' } },
+          y: { grid: { display: false }, grouped: false },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              filter: (item) => item.text !== 'Promedio', // el marcador se explica en el texto, no repetir leyenda
+            },
+          },
+          tooltip: {
+            callbacks: {
+              title: (items) => refs[items[0].dataIndex].arbitro,
+              label: (ctx) => {
+                const r = refs[ctx.dataIndex];
+                if (ctx.datasetIndex === 1) {
+                  return `Promedio: ${r.por_partido.toFixed(2)} (${r.partidos} partidos, ${r.tarjetas} tarjetas)`;
+                }
+                return `IC 95%: ${r.ic95_bajo.toFixed(2)}–${r.ic95_alto.toFixed(2)}`;
+              },
+            },
+          },
+          etiquetaDirecta: {
+            datasetIndex: 1,
+            texto: (i) => refs[i].por_partido.toFixed(2),
+          },
+        },
+      },
+      plugins: [etiquetaDirecta],
+    });
+
+    // --- Resultado de la prueba estadística ---
+    const sig = stats.significance;
+    document.getElementById('parrafo-significancia').textContent =
+      `Kruskal-Wallis entre los ${sig.kruskal.grupos} árbitros: H = ${sig.kruskal.statistic.toFixed(2)}, ` +
+      `p = ${sig.kruskal.pvalue.toFixed(3)}. Mann-Whitney (${sig.mannwhitney.arbitro} contra el resto): ` +
+      `p = ${sig.mannwhitney.pvalue.toFixed(3)} sin corregir, p = ${sig.mannwhitney.pvalue_bonferroni.toFixed(3)} ` +
+      `con corrección de Bonferroni (×${sig.mannwhitney.bonferroni_m}).`;
+
+    document.getElementById('cita-interpretacion').innerHTML =
+      `“${sig.interpretacion}”<span class="atribucion">— interpretación calculada por el pipeline (pipeline/stats.py), citada tal cual.</span>`;
+
+    const sigR08 = stats.significance_post_r08;
+    document.getElementById('nota-post-r08').textContent =
+      `Con los datos depurados (post-R08, sin el evento duplicado de P040) la conclusión ` +
+      `no cambia: Kruskal-Wallis p = ${sigR08.kruskal.pvalue.toFixed(3)}; Mann-Whitney ` +
+      `p = ${sigR08.mannwhitney.pvalue.toFixed(3)} → ${sigR08.mannwhitney.pvalue_bonferroni.toFixed(3)} con Bonferroni.`;
+
+    document.querySelector('[data-seccion="estadisticas"]').hidden = true;
+    document.getElementById('estadisticas-contenido').hidden = false;
+  }
+
+  cargarDatos('stats')
+    .then(render)
+    .catch((error) => {
+      const caja = document.querySelector('[data-seccion="estadisticas"]');
+      caja.className = 'placeholder error';
+      caja.innerHTML = describirError(error);
+      console.error('[estadisticas]', error);
+    });
+})();
 </script>
 
 <script>
